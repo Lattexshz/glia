@@ -1,5 +1,3 @@
-#![feature(once_cell)]
-
 mod platform_impl;
 mod sys;
 pub mod window;

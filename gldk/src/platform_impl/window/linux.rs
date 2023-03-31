@@ -56,9 +56,13 @@ impl RWindow {
         WindowID(0)
     }
 
+    pub fn swap_buffers(&self) {
+        self.window.glx_swap_buffers();
+    }
+
     pub fn run<F>(&self,callback: F)
         where
-            F: Fn(WindowEvent)
+            F: Fn(crate::window::WindowEvent)
     {
         self.window.run(|event, control_flow| {
             match event {
