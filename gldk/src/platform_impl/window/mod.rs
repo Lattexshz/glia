@@ -1,7 +1,8 @@
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+
 #[cfg(target_os = "linux")]
 pub mod linux;
 
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle, Win32WindowHandle};
 #[cfg(target_os = "linux")]
 pub use self::linux::*;
 

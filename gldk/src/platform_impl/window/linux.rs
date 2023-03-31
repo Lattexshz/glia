@@ -1,15 +1,16 @@
-use raw_window_handle::XlibWindowHandle;
-use safex::xlib::*;
+use crate::window::WindowID;
+use raw_window_handle::{RawWindowHandle, XlibWindowHandle};
 use safex::glx::*;
+use safex::xlib::*;
 
 pub struct RWindow {
     display: Display,
     window: Window,
-    cmap: ColorMap
+    cmap: ColorMap,
 }
 
 impl RWindow {
-    pub fn new(width:u32,height:u32,title:&str) -> Self {
+    pub fn new(width: u32, height: u32, title: &str) -> Self {
         let display = Display::open(None);
         let screen = Screen::default(&display);
         let root = Window::root_window(&display, &screen);
@@ -20,19 +21,22 @@ impl RWindow {
             &display,
             &mut [GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, GLX_NONE],
         )
-            .unwrap();
-        let window =
-            Window::new_with_glx(&display, &screen, &vi, None, 0, 0, width,height, 1, vi.depth, 0, &vi).unwrap();
+        .unwrap();
+        let window = Window::new_with_glx(
+            &display, &screen, &vi, None, 0, 0, width, height, 1, vi.depth, 0, &vi,
+        )
+        .unwrap();
 
         let glc = GLXContext::create(&display, &vi, None, gl::TRUE as i32);
         glx_make_current(&display, &window, &glc);
 
+        window.map(&display);
         window.set_window_title(title);
 
         Self {
             display,
             window,
-            cmap
+            cmap,
         }
     }
 
@@ -47,8 +51,6 @@ impl RWindow {
     }
 
     pub fn run(&self) {
-        self.window.run(|event,control_flow| {
-
-        })
+        self.window.run(|event, control_flow| {})
     }
 }

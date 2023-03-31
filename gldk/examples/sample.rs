@@ -1,6 +1,6 @@
 use gldk::window::GLDKWindow;
 
 fn main() {
-    let window = GLDKWindow::new(500,500,"Sample application");
+    let window = GLDKWindow::new(500, 500, "Sample application", None);
     window.run();
 }
