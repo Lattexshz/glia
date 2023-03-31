@@ -1,3 +1,4 @@
+use std::ffi::c_void;
 use crate::platform_impl::window::RWindow;
 use crate::GLConfig;
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
@@ -44,6 +45,10 @@ impl GLDKWindow {
 
     pub fn id(&self) -> WindowID {
         self.inner.id()
+    }
+
+    pub fn get_proc_address(&self,addr: &str) -> *const c_void {
+        self.inner.get_proc_address(addr)
     }
 
     pub fn get_gl(&self) -> &GL {

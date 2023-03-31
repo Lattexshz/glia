@@ -1,6 +1,7 @@
 use crate::sys::{wgl, wgl_extra, GL};
 use crate::window::{KeyCode, WindowEvent, WindowID};
 use core::ffi::c_void;
+use std::ffi::CString;
 
 use raw_window_handle::{RawWindowHandle, Win32WindowHandle};
 
@@ -8,11 +9,12 @@ use crate::{GLConfig, GLVersion};
 use once_cell::unsync::OnceCell;
 use std::ptr::{addr_of, null_mut};
 use std::sync::{Mutex};
+use windows_sys::core::PCSTR;
 use windows_sys::s;
 use windows_sys::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
 use windows_sys::Win32::Graphics::Gdi::GetDC;
 use windows_sys::Win32::Graphics::OpenGL::*;
-use windows_sys::Win32::System::LibraryLoader::GetModuleHandleA;
+use windows_sys::Win32::System::LibraryLoader::{GetModuleHandleA, GetProcAddress};
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 static mut CALLBACK: Option<Box<dyn Fn()>> = None;
@@ -140,12 +142,27 @@ impl RWindow {
             );
             wgl::MakeCurrent(hdc as wgl::types::HDC, ctx);
 
-
             Self {
                 hwnd,
                 hinstance: instance,
 
                 gl,
+            }
+        }
+    }
+
+    pub fn get_proc_address(&self,addr: &str) -> *const c_void {
+        unsafe {
+            let addr = CString::new(addr.as_bytes()).unwrap();
+            let addr = addr.as_ptr();
+
+            unsafe {
+                let p = wgl::GetProcAddress(addr) as *const core::ffi::c_void;
+                if !p.is_null() {
+                    return p;
+                }
+                let gl = GetModuleHandleA("Opengl32.dll".as_ptr());
+                GetProcAddress(gl, addr as PCSTR).unwrap() as *const _
             }
         }
     }
