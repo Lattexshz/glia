@@ -29,7 +29,7 @@ pub struct GLConfig {
 impl Default for GLConfig {
     fn default() -> Self {
         Self {
-            version: GLVersion::V4_6,
+            version: GLVersion::V3_2,
         }
     }
 }

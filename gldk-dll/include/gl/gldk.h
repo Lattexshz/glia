@@ -13,13 +13,17 @@ typedef enum glversion {
   V4_6,
 } GLVersion;
 
+typedef enum windowevent {
+    Update
+} WindowEvent;
+
 typedef struct glconfig {
     GLVersion version;
-} GLConfig
+} GLConfig;
 
 typedef struct gldkwindow {
 
-} GLDKWindow
+} GLDKWindow;
 
-GLDKWindow *gldkCreateWindow(unsigned int width,unsigned int height,const *char title,const *GLConfig config);
-void gldkShowWindow(GLDKWindow *window);
+GLDKWindow *gldkCreateWindow(unsigned int width,unsigned int height,const char *title,const GLConfig config);
+void gldkShowWindow(GLDKWindow *window,void (* callback)(WindowEvent));

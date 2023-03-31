@@ -1,6 +1,22 @@
 use crate::platform_impl::window::RWindow;
 use crate::GLConfig;
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+use crate::sys::GL;
+
+#[repr(C)]
+#[derive(Clone,Copy,Debug,PartialEq)]
+pub enum WindowEvent {
+    Update,
+
+    Keyup(KeyCode),
+    Keydown(KeyCode),
+
+    CloseRequested
+}
+
+#[repr(C)]
+#[derive(Clone,Copy,Debug,PartialEq)]
+pub struct KeyCode(pub u32);
 
 pub trait CallBack {
     fn update(&self);
@@ -30,9 +46,15 @@ impl GLDKWindow {
         self.inner.id()
     }
 
-    pub fn run(&self)
+    pub fn get_gl(&self) -> &GL {
+        self.inner.gl()
+    }
+
+    pub fn run<F>(&self,callback: F)
+    where
+        F: Fn(WindowEvent)
     {
-        self.inner.run();
+        self.inner.run(callback);
     }
 
     pub fn swap_buffers(&self) {

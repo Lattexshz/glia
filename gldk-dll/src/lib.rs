@@ -1,9 +1,8 @@
 #![no_main]
 
-use gldk::window::GLDKWindow;
+use gldk::window::{GLDKWindow, WindowEvent};
 use gldk::GLVersion;
 use std::ffi::{c_char, CStr};
-use std::str::Utf8Error;
 
 macro_rules! panic_gldk {
     () => {
@@ -25,26 +24,14 @@ impl Default for GLConfig {
     }
 }
 
-impl Into<gldk::GLConfig> for GLConfig {
-    fn into(self) -> gldk::GLConfig {
-        gldk::GLConfig {
-            version: self.version,
-        }
-    }
-}
-
 #[no_mangle]
 pub extern "C" fn gldkCreateWindow(
     width: u32,
     height: u32,
     title: *const c_char,
-    config: *const GLConfig,
+    config: GLConfig,
 ) -> *mut GLDKWindow {
-    let config = if config.is_null() {
-        GLConfig::default()
-    } else {
-        unsafe { &*config }
-    };
+
 
     let title = unsafe {
         match CStr::from_ptr(title).to_str() {
@@ -55,16 +42,24 @@ pub extern "C" fn gldkCreateWindow(
         }
     };
 
-    let b = Box::new(GLDKWindow::new(width, height, title, Some(config.into())));
+    let config = gldk::GLConfig {
+        version: config.version
+    };
+
+    let b = Box::new(GLDKWindow::new(width, height, title, Some(config)));
     Box::into_raw(b)
 }
 
+pub type CALLBACKPROC = extern "C" fn(WindowEvent);
+
 #[no_mangle]
-pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow) {
+pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow,callback: CALLBACKPROC) {
     if window.is_null() {
         panic_gldk!();
     }
 
     let window = unsafe { &*window };
-    window.run(|| {});
+    window.run(|event| {
+        callback(event);
+    });
 }
