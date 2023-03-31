@@ -6,7 +6,6 @@ use std::ffi::CString;
 use raw_window_handle::{RawWindowHandle, Win32WindowHandle};
 
 use crate::{GLConfig, GLVersion};
-use once_cell::unsync::OnceCell;
 use std::ptr::{addr_of, null_mut};
 use std::sync::{Mutex};
 use windows_sys::core::PCSTR;

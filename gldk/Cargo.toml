@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 raw-window-handle = "0.5.1"
-
+gl = "0.14.0"
 #[dependencies.safex]
 #version = "0.0.4"
 #features = [
@@ -34,6 +34,3 @@ features = [
 
 [build-dependencies]
 gl_generator = "0.14"
-
-[dev-dependencies]
-gl = "0.14.0"

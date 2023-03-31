@@ -1,6 +1,4 @@
-use crate::sys::wgl::types::GLenum;
 use std::ffi::{c_char, CStr};
-use windows_sys::Win32::Graphics::OpenGL::GL_PROJECTION;
 
 #[cfg(target_os = "linux")]
 pub mod linux;

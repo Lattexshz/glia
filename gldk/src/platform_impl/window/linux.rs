@@ -2,6 +2,8 @@ use crate::window::WindowID;
 use raw_window_handle::{RawWindowHandle, XlibWindowHandle};
 use safex::glx::*;
 use safex::xlib::*;
+use crate::GLConfig;
+use core::ffi::c_void;
 
 pub struct RWindow {
     display: Display,
