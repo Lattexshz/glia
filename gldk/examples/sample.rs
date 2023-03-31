@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{c_char, CStr, CString};
 use std::{mem, ptr};
 use gl::{COLOR_BUFFER_BIT, DEPTH_BUFFER_BIT, VERSION, VENDOR};
 use gl::types::{GLboolean, GLchar, GLenum, GLfloat, GLint, GLsizeiptr, GLuint};
@@ -95,14 +95,15 @@ fn link_program(vs: GLuint, fs: GLuint) -> GLuint {
 
 fn main() {
     let window = GLDKWindow::new(500, 500, "Sample application", None);
-    let gl = window.get_gl();
 
     gl::load_with(|addr| {
         window.get_proc_address(addr)
     });
 
-    // println!("GL_VERSION: {}",gl.get_string(VERSION));
-    // println!("GL_VENDOR: {}",gl.get_string(VENDOR));
+    unsafe {
+        println!("GL_VERSION: {}",CStr::from_ptr(gl::GetString(VERSION) as *const c_char).to_str().unwrap());
+        println!("GL_VENDOR: {}",CStr::from_ptr(gl::GetString(VENDOR) as *const c_char).to_str().unwrap());
+    }
 
     let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
     let fs = compile_shader(FS_SRC, gl::FRAGMENT_SHADER);

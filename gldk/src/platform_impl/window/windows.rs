@@ -1,4 +1,4 @@
-use crate::sys::{wgl, wgl_extra, GL};
+use crate::sys::{wgl, wgl_extra};
 use crate::window::{KeyCode, WindowEvent, WindowID};
 use core::ffi::c_void;
 use std::ffi::CString;
@@ -22,12 +22,10 @@ static mut CALLBACK: Option<Box<dyn Fn()>> = None;
 pub struct RWindow {
     hwnd: HWND,
     hinstance: HINSTANCE,
-
-    pub(crate) gl: GL,
 }
 
 impl RWindow {
-    pub fn new(_width: u32, _height: u32, _title: &str, conf: GLConfig) -> Self {
+    pub fn new(width: u32, height: u32, title: &str, conf: GLConfig) -> Self {
         let (major, minor) = match conf.version {
             GLVersion::V3_0 => (3, 0),
             GLVersion::V3_1 => (3, 1),
@@ -41,8 +39,6 @@ impl RWindow {
             GLVersion::V4_5 => (4, 5),
             GLVersion::V4_6 => (4, 6),
         };
-
-        let gl = GL::new(major, minor);
 
         unsafe {
             let instance = GetModuleHandleA(std::ptr::null());
@@ -70,16 +66,16 @@ impl RWindow {
             let hwnd = CreateWindowExA(
                 0,
                 window_class,
-                s!("This is a sample window"),
+                format!("{}\0",title).as_ptr(),
                 WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
+                width as i32,
+                height as i32,
                 0,
                 0,
                 instance,
-                addr_of!(gl) as *const c_void,
+                std::ptr::null(),
             );
 
 
@@ -119,9 +115,6 @@ impl RWindow {
             let ctx = wgl::CreateContext(hdc as wgl::types::HDC);
             wgl::MakeCurrent(hdc as wgl::types::HDC, ctx);
 
-            let major = gl.major_version();
-            let minor = gl.minor_version();
-
             let att = [
                 wgl_extra::CONTEXT_MAJOR_VERSION_ARB,
                 major,
@@ -145,8 +138,6 @@ impl RWindow {
             Self {
                 hwnd,
                 hinstance: instance,
-
-                gl,
             }
         }
     }
@@ -165,10 +156,6 @@ impl RWindow {
                 GetProcAddress(gl, addr as PCSTR).unwrap() as *const _
             }
         }
-    }
-
-    pub fn gl(&self) -> &GL {
-        &self.gl
     }
 
     pub fn handle(&self) -> RawWindowHandle {
@@ -230,11 +217,9 @@ impl RWindow {
         lparam: LPARAM,
     ) -> LRESULT {
         unsafe {
-            static mut GL: Option<&GL> = None;
             if message == WM_NCCREATE {
                 let cs = lparam as *const CREATESTRUCTA;
-                let this = (*cs).lpCreateParams as *const GL;
-                GL = Some(&*this);
+                let this = (*cs).lpCreateParams as *const RWindow;
             }
 
             match message {
