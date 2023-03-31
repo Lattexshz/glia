@@ -6,11 +6,12 @@ use safex::xlib::*;
 pub struct RWindow {
     display: Display,
     window: Window,
+    glc: GLXContext,
     cmap: ColorMap,
 }
 
 impl RWindow {
-    pub fn new(width: u32, height: u32, title: &str) -> Self {
+    pub fn new(width: u32, height: u32, title: &str,conf: GLConfig) -> Self {
         let display = Display::open(None);
         let screen = Screen::default(&display);
         let root = Window::root_window(&display, &screen);
@@ -36,8 +37,13 @@ impl RWindow {
         Self {
             display,
             window,
+            glc,
             cmap,
         }
+    }
+
+    pub fn get_proc_address(&self,addr: &str) -> *const c_void {
+        self.glc.get_proc_address(addr).unwrap()
     }
 
     pub fn handle(&self) -> RawWindowHandle {
@@ -50,7 +56,16 @@ impl RWindow {
         WindowID(0)
     }
 
-    pub fn run(&self) {
-        self.window.run(|event, control_flow| {})
+    pub fn run<F>(&self,callback: F)
+        where
+            F: Fn(WindowEvent)
+    {
+        self.window.run(|event, control_flow| {
+            match event {
+                WindowEvent::Expose => {
+                    callback(crate::window::WindowEvent::Update);
+                }
+            }
+        })
     }
 }
