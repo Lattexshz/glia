@@ -27,7 +27,7 @@ pub struct GLConfig {
 impl Default for GLConfig {
     fn default() -> Self {
         Self {
-            version: GLVersion::V3_2,
+            version: GLVersion::V3_1,
         }
     }
 }

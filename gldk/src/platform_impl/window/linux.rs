@@ -20,9 +20,23 @@ impl RWindow {
 
         let cmap = ColorMap::default(&display, &screen);
 
+        let (major, minor) = match conf.version {
+            GLVersion::V3_0 => (3, 0),
+            GLVersion::V3_1 => (3, 1),
+            GLVersion::V3_2 => (3, 2),
+            GLVersion::V3_3 => (3, 3),
+            GLVersion::V4_0 => (4, 0),
+            GLVersion::V4_1 => (4, 1),
+            GLVersion::V4_2 => (4, 2),
+            GLVersion::V4_3 => (4, 3),
+            GLVersion::V4_4 => (4, 4),
+            GLVersion::V4_5 => (4, 5),
+            GLVersion::V4_6 => (4, 6),
+        };
+
         let vi = glx_choose_visual(
             &display,
-            &mut [GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, GLX_NONE],
+            &mut [GLX_CONTEXT_MAJOR_VERSION_ARB,major,GLX_CONTEXT_MINOR_VERSION_ARB,minor,GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, GLX_NONE],
         )
         .unwrap();
         let window = Window::new_with_glx(
@@ -45,7 +59,7 @@ impl RWindow {
     }
 
     pub fn get_proc_address(&self,addr: &str) -> *const c_void {
-        self.glc.get_proc_address(addr).unwrap()
+        self.glc.get_proc_address(addr).unwrap() as *const c_void
     }
 
     pub fn handle(&self) -> RawWindowHandle {

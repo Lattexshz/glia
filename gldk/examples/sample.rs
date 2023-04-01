@@ -2,7 +2,6 @@ use std::ffi::{c_char, CStr, CString};
 use std::{mem, ptr};
 use gl::{COLOR_BUFFER_BIT, DEPTH_BUFFER_BIT, VERSION, VENDOR};
 use gl::types::{GLboolean, GLchar, GLenum, GLfloat, GLint, GLsizeiptr, GLuint};
-use windows_sys::Win32::Graphics::OpenGL::{GL_TRIANGLES, gluLookAt};
 use gldk::window::{GLDKWindow, WindowEvent};
 
 
@@ -10,14 +9,14 @@ static VERTEX_DATA: [GLfloat; 6] = [0.0, 0.5, 0.5, -0.5, -0.5, -0.5];
 
 // Shader sources
 static VS_SRC: &'static str = "
-#version 150
+#version 140
 in vec2 position;
 void main() {
     gl_Position = vec4(position, 0.0, 1.0);
 }";
 
 static FS_SRC: &'static str = "
-#version 150
+#version 140
 out vec4 out_color;
 void main() {
     out_color = vec4(1.0, 1.0, 1.0, 1.0);

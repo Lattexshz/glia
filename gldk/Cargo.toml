@@ -8,12 +8,6 @@ edition = "2021"
 [dependencies]
 raw-window-handle = "0.5.1"
 gl = "0.14.0"
-#[dependencies.safex]
-#version = "0.0.4"
-#features = [
-#    "xlib",
-#    "glx"
-#]
 
 [target."cfg(windows)".dependencies.windows-sys]
 version = "0.45.0"
@@ -26,7 +20,7 @@ features = [
 ]
 
 [target."cfg(unix)".dependencies.safex]
-version = "0.0.4"
+git = "https://github.com/Lattexshz/SafeX"
 features = [
     "xlib",
     "glx"
