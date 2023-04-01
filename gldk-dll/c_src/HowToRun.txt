@@ -1,1 +1,0 @@
-gcc -I./ -L./ -o sample.exe main.c ../include/gl/gldk.h -lgldk1 -lopengl32

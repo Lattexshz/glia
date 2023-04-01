@@ -3,12 +3,23 @@
 use gldk::window::{GLDKWindow, WindowEvent};
 use gldk::GLVersion;
 use std::ffi::{c_char, CStr};
+use std::fmt::{Arguments, Display, Formatter};
 
-macro_rules! panic_gldk {
-    () => {
-        println!("GLDK ERROR");
-        std::process::exit(1);
-    };
+pub enum GLDKError {
+    NullPtr,
+}
+
+impl Display for GLDKError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GLDKError::NullPtr => write!(f, "NullPtr(00001): Invalid pointer passed."),
+        }
+    }
+}
+
+fn panic_gldk(error: GLDKError) {
+    println!("GLDK error {}", error);
+    std::process::exit(1);
 }
 
 #[repr(C)]
@@ -35,7 +46,8 @@ pub extern "C" fn gldkCreateWindow(
         match CStr::from_ptr(title).to_str() {
             Ok(t) => t,
             Err(_) => {
-                panic_gldk!();
+                panic_gldk(GLDKError::NullPtr);
+                std::process::exit(1);
             }
         }
     };
@@ -53,7 +65,7 @@ pub type CALLBACKPROC = extern "C" fn(WindowEvent);
 #[no_mangle]
 pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow, callback: CALLBACKPROC) {
     if window.is_null() {
-        panic_gldk!();
+        panic_gldk(GLDKError::NullPtr);
     }
 
     let window = unsafe { &*window };
@@ -66,20 +78,56 @@ pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow, callback: CALLBACKPROC
 #[no_mangle]
 pub extern "C" fn gldkMakeCurrent(window: *mut GLDKWindow) {
     if window.is_null() {
-        panic_gldk!();
+        panic_gldk(GLDKError::NullPtr);
     }
 
     let window = unsafe { &*window };
     window.make_current()
 }
 
-
 #[no_mangle]
 pub extern "C" fn gldkSwapBuffers(window: *mut GLDKWindow) {
     if window.is_null() {
-        panic_gldk!();
+        panic_gldk(GLDKError::NullPtr);
     }
 
     let window = unsafe { &*window };
     window.swap_buffers();
+}
+
+#[no_mangle]
+pub extern "C" fn gldkSetWindowTitle(window: *mut GLDKWindow, title: *const c_char) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    let window = unsafe { &*window };
+
+    window.set_window_title(unsafe { CStr::from_ptr(title).to_str().unwrap() });
+}
+
+#[no_mangle]
+pub extern "C" fn gldkGetWindowSize(window: *mut GLDKWindow, width: &mut u32, height: &mut u32) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    let window = unsafe { &*window };
+
+    let (w, h) = window.get_window_size();
+    *width = w;
+    *height = h;
+}
+
+#[no_mangle]
+pub extern "C" fn gldkGetWindowPos(window: *mut GLDKWindow, x_ptr: &mut u32, y_ptr: &mut u32) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    let window = unsafe { &*window };
+
+    let (x, y) = window.get_window_pos();
+    *x_ptr = x;
+    *y_ptr = y;
 }

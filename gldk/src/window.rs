@@ -18,10 +18,6 @@ pub enum WindowEvent {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct KeyCode(pub u32);
 
-pub trait CallBack {
-    fn update(&self);
-}
-
 #[repr(C)]
 pub struct WindowID(pub u64);
 
@@ -57,12 +53,26 @@ impl GLDKWindow {
         self.inner.run(callback);
     }
 
+    // GL Functions
+
     pub fn make_current(&self) {
         self.inner.make_current();
     }
 
     pub fn swap_buffers(&self) {
         self.inner.swap_buffers();
+    }
+
+    pub fn set_window_title(&self, title: &str) {
+        self.inner.set_window_title(title);
+    }
+
+    pub fn get_window_size(&self) -> (u32, u32) {
+        self.inner.get_window_size()
+    }
+
+    pub fn get_window_pos(&self) -> (u32, u32) {
+        self.inner.get_window_pos()
     }
 }
 

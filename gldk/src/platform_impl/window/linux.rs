@@ -96,4 +96,20 @@ impl RWindow {
             }
         })
     }
+
+    pub fn set_window_title(&self, title: &str) {
+        self.window.set_window_title(title);
+    }
+
+    pub fn get_window_size(&self) -> (u32, u32) {
+        let geometry = self.window.get_geometry();
+
+        (geometry.width, geometry.height)
+    }
+
+    pub fn get_window_pos(&self) -> (u32, u32) {
+        let geometry = self.window.get_geometry();
+
+        (geometry.x as u32, geometry.y as u32)
+    }
 }

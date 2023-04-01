@@ -2,6 +2,7 @@ use crate::sys::{wgl, wgl_extra};
 use crate::window::{KeyCode, WindowEvent, WindowID};
 use core::ffi::c_void;
 use std::ffi::CString;
+use std::iter::once;
 
 use raw_window_handle::{RawWindowHandle, Win32WindowHandle};
 
@@ -9,17 +10,19 @@ use crate::{GLConfig, GLVersion};
 use std::ptr::{addr_of, null_mut};
 
 use windows_sys::core::PCSTR;
-use windows_sys::s;
-use windows_sys::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
+use windows_sys::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows_sys::Win32::Graphics::Gdi::GetDC;
 use windows_sys::Win32::Graphics::OpenGL::*;
-use windows_sys::Win32::System::LibraryLoader::{GetModuleHandleA, GetProcAddress};
+use windows_sys::Win32::System::LibraryLoader::{
+    GetModuleHandleA, GetModuleHandleW, GetProcAddress,
+};
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
+use windows_sys::{s, w};
 
 pub struct RWindow {
     hwnd: HWND,
     hinstance: HINSTANCE,
-    ctx: HGLRC
+    ctx: HGLRC,
 }
 
 impl RWindow {
@@ -133,7 +136,7 @@ impl RWindow {
             Self {
                 hwnd,
                 hinstance: instance,
-                ctx: ctx as HGLRC
+                ctx: ctx as HGLRC,
             }
         }
     }
@@ -165,7 +168,10 @@ impl RWindow {
 
     pub fn make_current(&self) {
         unsafe {
-            wgl::MakeCurrent(GetDC(self.hwnd) as wgl::types::HDC, self.ctx as crate::sys::wgl::types::HGLRC);
+            wgl::MakeCurrent(
+                GetDC(self.hwnd) as wgl::types::HDC,
+                self.ctx as crate::sys::wgl::types::HGLRC,
+            );
         }
     }
 
@@ -206,6 +212,40 @@ impl RWindow {
         unsafe {
             SwapBuffers(GetDC(self.hwnd));
         }
+    }
+
+    pub fn set_window_title(&self, title: &str) {
+        unsafe {
+            SetWindowTextA(self.hwnd, title.as_ptr());
+        }
+    }
+
+    pub fn get_window_size(&self) -> (u32, u32) {
+        let mut rect = RECT {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+        };
+
+        unsafe {
+            GetWindowRect(self.hwnd, &mut rect);
+        }
+        (rect.left as u32, rect.bottom as u32)
+    }
+
+    pub fn get_window_pos(&self) -> (u32, u32) {
+        let mut rect = RECT {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+        };
+
+        unsafe {
+            GetWindowRect(self.hwnd, &mut rect);
+        }
+        (rect.right as u32, rect.top as u32)
     }
 
     extern "system" fn wndproc(
