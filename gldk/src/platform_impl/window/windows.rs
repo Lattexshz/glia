@@ -7,7 +7,7 @@ use raw_window_handle::{RawWindowHandle, Win32WindowHandle};
 
 use crate::{GLConfig, GLVersion};
 use std::ptr::{addr_of, null_mut};
-use std::sync::{Mutex};
+
 use windows_sys::core::PCSTR;
 use windows_sys::s;
 use windows_sys::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
@@ -16,11 +16,10 @@ use windows_sys::Win32::Graphics::OpenGL::*;
 use windows_sys::Win32::System::LibraryLoader::{GetModuleHandleA, GetProcAddress};
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
-static mut CALLBACK: Option<Box<dyn Fn()>> = None;
-
 pub struct RWindow {
     hwnd: HWND,
     hinstance: HINSTANCE,
+    ctx: HGLRC
 }
 
 impl RWindow {
@@ -65,7 +64,7 @@ impl RWindow {
             let hwnd = CreateWindowExA(
                 0,
                 window_class,
-                format!("{}\0",title).as_ptr(),
+                format!("{}\0", title).as_ptr(),
                 WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
@@ -76,7 +75,6 @@ impl RWindow {
                 instance,
                 std::ptr::null(),
             );
-
 
             let pfd = PIXELFORMATDESCRIPTOR {
                 nSize: std::mem::size_of::<PIXELFORMATDESCRIPTOR>() as u16,
@@ -111,8 +109,8 @@ impl RWindow {
             let pixel_format = ChoosePixelFormat(hdc, addr_of!(pfd));
             SetPixelFormat(hdc, pixel_format, addr_of!(pfd));
 
-            let ctx = wgl::CreateContext(hdc as wgl::types::HDC);
-            wgl::MakeCurrent(hdc as wgl::types::HDC, ctx);
+            let old_ctx = wgl::CreateContext(hdc as wgl::types::HDC);
+            wgl::MakeCurrent(hdc as wgl::types::HDC, old_ctx);
 
             let att = [
                 wgl_extra::CONTEXT_MAJOR_VERSION_ARB,
@@ -127,33 +125,30 @@ impl RWindow {
             ];
 
             let func = crate::sys::WGLARBFunctions::load();
-            let ctx = (func.wglCreateContextAttribsARB)(
-                hdc as wgl_extra::types::HDC,
-                null_mut(),
-                &att,
-            );
-            wgl::MakeCurrent(hdc as wgl::types::HDC, ctx);
+            let ctx =
+                (func.wglCreateContextAttribsARB)(hdc as wgl_extra::types::HDC, null_mut(), &att);
+
+            wgl::DeleteContext(old_ctx);
 
             Self {
                 hwnd,
                 hinstance: instance,
+                ctx: ctx as HGLRC
             }
         }
     }
 
-    pub fn get_proc_address(&self,addr: &str) -> *const c_void {
-        unsafe {
-            let addr = CString::new(addr.as_bytes()).unwrap();
-            let addr = addr.as_ptr();
+    pub fn get_proc_address(&self, addr: &str) -> *const c_void {
+        let addr = CString::new(addr.as_bytes()).unwrap();
+        let addr = addr.as_ptr();
 
-            unsafe {
-                let p = wgl::GetProcAddress(addr) as *const core::ffi::c_void;
-                if !p.is_null() {
-                    return p;
-                }
-                let gl = GetModuleHandleA("Opengl32.dll".as_ptr());
-                GetProcAddress(gl, addr as PCSTR).unwrap() as *const _
+        unsafe {
+            let p = wgl::GetProcAddress(addr) as *const core::ffi::c_void;
+            if !p.is_null() {
+                return p;
             }
+            let gl = GetModuleHandleA("Opengl32.dll".as_ptr());
+            GetProcAddress(gl, addr as PCSTR).unwrap() as *const _
         }
     }
 
@@ -168,9 +163,15 @@ impl RWindow {
         WindowID(0)
     }
 
-    pub fn run<F>(&self,callback: F)
+    pub fn make_current(&self) {
+        unsafe {
+            wgl::MakeCurrent(GetDC(self.hwnd) as wgl::types::HDC, self.ctx as crate::sys::wgl::types::HGLRC);
+        }
+    }
+
+    pub fn run<F>(&self, callback: F)
     where
-        F: Fn(WindowEvent)
+        F: Fn(WindowEvent),
     {
         unsafe {
             let mut message = core::mem::zeroed();
@@ -195,9 +196,7 @@ impl RWindow {
                         callback(WindowEvent::Keyup(KeyCode(message.wParam as u32)));
                     }
 
-                    _ => {
-
-                    }
+                    _ => {}
                 }
             }
         }
@@ -218,16 +217,12 @@ impl RWindow {
         unsafe {
             if message == WM_NCCREATE {
                 let cs = lparam as *const CREATESTRUCTA;
-                let this = (*cs).lpCreateParams as *const RWindow;
+                let _this = (*cs).lpCreateParams as *const RWindow;
             }
 
             match message {
-                WM_CREATE => {
-                    0
-                }
-                WM_PAINT => {
-                    0
-                }
+                WM_CREATE => 0,
+                WM_PAINT => 0,
                 WM_DESTROY => {
                     PostQuitMessage(0);
                     0

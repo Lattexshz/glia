@@ -1,9 +1,8 @@
+use gl::types::{GLboolean, GLchar, GLenum, GLfloat, GLint, GLsizeiptr, GLuint};
+use gl::{COLOR_BUFFER_BIT, VENDOR, VERSION};
+use gldk::window::{GLDKWindow, WindowEvent};
 use std::ffi::{c_char, CStr, CString};
 use std::{mem, ptr};
-use gl::{COLOR_BUFFER_BIT, DEPTH_BUFFER_BIT, VERSION, VENDOR};
-use gl::types::{GLboolean, GLchar, GLenum, GLfloat, GLint, GLsizeiptr, GLuint};
-use gldk::window::{GLDKWindow, WindowEvent};
-
 
 static VERTEX_DATA: [GLfloat; 6] = [0.0, 0.5, 0.5, -0.5, -0.5, -0.5];
 
@@ -19,7 +18,7 @@ static FS_SRC: &'static str = "
 #version 140
 out vec4 out_color;
 void main() {
-    out_color = vec4(1.0, 1.0, 1.0, 1.0);
+    out_color = vec4(0.0, 0.0, 1.0, 1.0);
 }";
 
 fn compile_shader(src: &str, ty: GLenum) -> GLuint {
@@ -91,17 +90,25 @@ fn link_program(vs: GLuint, fs: GLuint) -> GLuint {
     }
 }
 
-
 fn main() {
     let window = GLDKWindow::new(500, 500, "Sample application", None);
 
-    gl::load_with(|addr| {
-        window.get_proc_address(addr)
-    });
+    window.make_current();
+    gl::load_with(|addr| window.get_proc_address(addr));
 
     unsafe {
-        println!("GL_VERSION: {}",CStr::from_ptr(gl::GetString(VERSION) as *const c_char).to_str().unwrap());
-        println!("GL_VENDOR: {}",CStr::from_ptr(gl::GetString(VENDOR) as *const c_char).to_str().unwrap());
+        println!(
+            "GL_VERSION: {}",
+            CStr::from_ptr(gl::GetString(VERSION) as *const c_char)
+                .to_str()
+                .unwrap()
+        );
+        println!(
+            "GL_VENDOR: {}",
+            CStr::from_ptr(gl::GetString(VENDOR) as *const c_char)
+                .to_str()
+                .unwrap()
+        );
     }
 
     let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
@@ -143,22 +150,17 @@ fn main() {
         );
     }
 
-    window.run(|event| {
-        match event {
-            WindowEvent::Update => {
-                unsafe {
-                    gl::ClearColor(1.0,0.0,1.0,1.0);
-                    gl::Clear(COLOR_BUFFER_BIT);
-                    gl::DrawArrays(gl::TRIANGLES, 0, 3);
-                }
-
-
-                window.swap_buffers();
+    window.run(|event| match event {
+        WindowEvent::Update => {
+            unsafe {
+                gl::ClearColor(1.0, 1.0, 1.0, 1.0);
+                gl::Clear(COLOR_BUFFER_BIT);
+                gl::DrawArrays(gl::TRIANGLES, 0, 3);
             }
 
-            _ => {
-
-            }
+            window.swap_buffers();
         }
+
+        _ => {}
     });
 }

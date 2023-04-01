@@ -1,21 +1,21 @@
-use std::ffi::c_void;
 use crate::platform_impl::window::RWindow;
 use crate::GLConfig;
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+use std::ffi::c_void;
 
 #[repr(C)]
-#[derive(Clone,Copy,Debug,PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WindowEvent {
     Update,
 
     Keyup(KeyCode),
     Keydown(KeyCode),
 
-    CloseRequested
+    CloseRequested,
 }
 
 #[repr(C)]
-#[derive(Clone,Copy,Debug,PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct KeyCode(pub u32);
 
 pub trait CallBack {
@@ -46,15 +46,19 @@ impl GLDKWindow {
         self.inner.id()
     }
 
-    pub fn get_proc_address(&self,addr: &str) -> *const c_void {
+    pub fn get_proc_address(&self, addr: &str) -> *const c_void {
         self.inner.get_proc_address(addr)
     }
 
-    pub fn run<F>(&self,callback: F)
+    pub fn run<F>(&self, callback: F)
     where
-        F: Fn(WindowEvent)
+        F: Fn(WindowEvent),
     {
         self.inner.run(callback);
+    }
+
+    pub fn make_current(&self) {
+        self.inner.make_current();
     }
 
     pub fn swap_buffers(&self) {

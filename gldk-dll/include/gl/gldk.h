@@ -26,4 +26,6 @@ typedef struct gldkwindow {
 } GLDKWindow;
 
 GLDKWindow *gldkCreateWindow(unsigned int width,unsigned int height,const char *title,const GLConfig config);
+void gldkMakeCurrent(GLDKWindow *window);
 void gldkShowWindow(GLDKWindow *window,void (* callback)(WindowEvent));
+void gldkSwapBuffers(GLDKWindow *window);

@@ -31,8 +31,6 @@ pub extern "C" fn gldkCreateWindow(
     title: *const c_char,
     config: GLConfig,
 ) -> *mut GLDKWindow {
-
-
     let title = unsafe {
         match CStr::from_ptr(title).to_str() {
             Ok(t) => t,
@@ -43,7 +41,7 @@ pub extern "C" fn gldkCreateWindow(
     };
 
     let config = gldk::GLConfig {
-        version: config.version
+        version: config.version,
     };
 
     let b = Box::new(GLDKWindow::new(width, height, title, Some(config)));
@@ -53,13 +51,35 @@ pub extern "C" fn gldkCreateWindow(
 pub type CALLBACKPROC = extern "C" fn(WindowEvent);
 
 #[no_mangle]
-pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow,callback: CALLBACKPROC) {
+pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow, callback: CALLBACKPROC) {
     if window.is_null() {
         panic_gldk!();
     }
 
     let window = unsafe { &*window };
+
     window.run(|event| {
         callback(event);
     });
+}
+
+#[no_mangle]
+pub extern "C" fn gldkMakeCurrent(window: *mut GLDKWindow) {
+    if window.is_null() {
+        panic_gldk!();
+    }
+
+    let window = unsafe { &*window };
+    window.make_current()
+}
+
+
+#[no_mangle]
+pub extern "C" fn gldkSwapBuffers(window: *mut GLDKWindow) {
+    if window.is_null() {
+        panic_gldk!();
+    }
+
+    let window = unsafe { &*window };
+    window.swap_buffers();
 }
