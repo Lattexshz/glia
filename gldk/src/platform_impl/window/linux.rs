@@ -1,25 +1,29 @@
 use crate::window::WindowID;
 use crate::{GLConfig, GLVersion};
 use core::ffi::c_void;
+use gwl::window::*;
 use raw_window_handle::{RawWindowHandle, XlibWindowHandle};
 use safex::glx::*;
-use safex::xlib::*;
-use gwl::window::*;
+use std::ptr::addr_of_mut;
 
 pub struct Props {
     glc: Option<GLXContext>,
+    width: u32,
+    height: u32,
+    title: String,
 }
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub struct BuildAction {
     conf: GLConfig,
-    props: *mut Props
+    props: *mut Props,
 }
 
 impl WindowBuildAction for BuildAction {
+    fn pre_init(&mut self) {}
     fn override_window_handle(&mut self) -> Option<WindowHandle> {
-        let display = Display::open(None);
-        let screen = Screen::default(&display);
+        let display = safex::xlib::Display::open(None);
+        let screen = safex::xlib::Screen::default(&display);
 
         let (major, minor) = match self.conf.version {
             GLVersion::V3_0 => (3, 0),
@@ -49,43 +53,59 @@ impl WindowBuildAction for BuildAction {
                 GLX_NONE,
             ],
         )
-            .unwrap();
-        let window = Window::new_with_glx(
-            &display, &screen, &vi, None, 0, 0, width, height, 1, vi.depth, 0, &vi,
-        )
-            .unwrap();
+        .unwrap();
+        let window = unsafe {
+            safex::xlib::Window::new_with_glx(
+                &display,
+                &screen,
+                &vi,
+                None,
+                0,
+                0,
+                (*self.props).width,
+                (*self.props).height,
+                1,
+                vi.depth,
+                0,
+                &vi,
+            )
+        }
+        .unwrap();
 
         let glc = GLXContext::create(&display, &vi, None, gl::TRUE as i32);
         glx_make_current(&display, &window, &glc);
 
-        self.props.glc = Some(glc);
+        unsafe {
+            (*self.props).glc = Some(glc);
+            window.map();
+            window.set_window_title((*self.props).title.as_str());
+        }
 
-        window.map(&display);
-        window.set_window_title(title);
-
-        let handle = WindowHandle {
-            window,
-            display
-        };
+        let handle = WindowHandle { window, display };
 
         Some(handle)
     }
+
+    fn window_created(&mut self, handle: &WindowInstance) {}
 }
 
 pub struct RWindow {
     props: Props,
-    inner: Window
+    inner: Window,
 }
 
 impl RWindow {
     pub fn new(width: u32, height: u32, title: &str, conf: GLConfig) -> Self {
-        let props = Props {
-            glc: None
+        let mut props = Props {
+            glc: None,
+            width,
+            height,
+            title: title.to_owned(),
         };
-        
+
         let action = BuildAction {
             conf,
-            props: addr_of_mut!(props)
+            props: addr_of_mut!(props),
         };
 
         let inner = WindowBuilder::new()
@@ -95,17 +115,16 @@ impl RWindow {
             .build_action(Box::new(action))
             .build();
 
-
-
-
-        Self {
-            props,
-            inner
-        }
+        Self { props, inner }
     }
 
     pub fn get_proc_address(&self, addr: &str) -> *const c_void {
-        self.props.glc.unwrap().get_proc_address(addr).unwrap() as *const c_void
+        self.props
+            .glc
+            .as_ref()
+            .unwrap()
+            .get_proc_address(addr)
+            .unwrap() as *const c_void
     }
 
     pub fn handle(&self) -> RawWindowHandle {
@@ -119,11 +138,17 @@ impl RWindow {
     }
 
     pub fn swap_buffers(&self) {
-        self.window.glx_swap_buffers();
+        let instance = self.inner.get_instance();
+        instance.window.glx_swap_buffers();
     }
 
     pub fn make_current(&self) {
-        //glx_make_current(&self.display, &self.window, &self.glc);
+        let instance = self.inner.get_instance();
+        glx_make_current(
+            instance.display,
+            instance.window,
+            &self.props.glc.as_ref().unwrap(),
+        );
     }
 
     pub fn run<F>(&self, callback: F)
@@ -134,6 +159,8 @@ impl RWindow {
             WindowEvent::Expose => {
                 callback(crate::window::WindowEvent::Update);
             }
+
+            _ => {}
         })
     }
 
@@ -144,12 +171,12 @@ impl RWindow {
     pub fn get_window_size(&self) -> (u32, u32) {
         //let geometry = self.window.get_geometry();
 
-        (0,0)
+        (0, 0)
     }
 
     pub fn get_window_pos(&self) -> (u32, u32) {
         //let geometry = self.window.get_geometry();
 
-        (0,0)
+        (0, 0)
     }
 }

@@ -1,15 +1,15 @@
 use crate::sys::{wgl, wgl_extra};
 use crate::window::{KeyCode, WindowEvent, WindowID};
 use core::ffi::c_void;
-use std::ffi::{CString, OsStr};
+use std::ffi::{CString};
 
-use std::os::windows::ffi::OsStrExt;
+
 
 use raw_window_handle::{RawWindowHandle, Win32WindowHandle};
 
 use crate::{GLConfig, GLVersion};
+use gwl::window::{Window, WindowBuildAction, WindowBuilder, WindowInstance};
 use std::ptr::{addr_of, addr_of_mut, null_mut};
-use gwl::window::{Window, WindowBuildAction, WindowBuilder, WindowHandle, WindowInstance};
 
 use winapi::um::winuser::*;
 
@@ -17,8 +17,8 @@ use crate::sys::wgl_extra::types::HGLRC;
 use winapi::shared::minwindef::*;
 use winapi::shared::ntdef::*;
 use winapi::shared::windef::*;
-use winapi::um::dwmapi::{DWM_BLURBEHIND, DwmEnableBlurBehindWindow};
-use winapi::um::libloaderapi::{GetModuleHandleA, GetModuleHandleW, GetProcAddress};
+
+use winapi::um::libloaderapi::{GetModuleHandleA, GetProcAddress};
 use winapi::um::wingdi::{
     ChoosePixelFormat, SetPixelFormat, SwapBuffers, PFD_DOUBLEBUFFER, PFD_DRAW_TO_WINDOW,
     PFD_MAIN_PLANE, PFD_SUPPORT_OPENGL, PFD_TYPE_RGBA, PIXELFORMATDESCRIPTOR,
@@ -27,19 +27,17 @@ use winapi::um::wingdi::{
 pub struct Props {
     hwnd: Option<HWND>,
     hinstance: Option<HINSTANCE>,
-    ctx: Option<HGLRC>
+    ctx: Option<HGLRC>,
 }
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub struct BuildAction {
     conf: GLConfig,
-    props: *mut Props
+    props: *mut Props,
 }
 
 impl WindowBuildAction for BuildAction {
-    fn pre_init(&mut self) {
-
-    }
+    fn pre_init(&mut self) {}
 
     fn window_created(&mut self, handle: &WindowInstance) {
         unsafe {
@@ -114,10 +112,7 @@ impl WindowBuildAction for BuildAction {
             let ctx =
                 (func.wglCreateContextAttribsARB)(hdc as wgl_extra::types::HDC, null_mut(), &att);
 
-
-            unsafe {
-                (*self.props).ctx = Some(ctx);
-            }
+            (*self.props).ctx = Some(ctx);
 
             wgl::DeleteContext(old_ctx);
         }
@@ -126,7 +121,7 @@ impl WindowBuildAction for BuildAction {
 
 pub struct RWindow {
     props: Props,
-    inner: Window
+    inner: Window,
 }
 
 impl RWindow {
@@ -139,7 +134,7 @@ impl RWindow {
 
         let action = BuildAction {
             conf,
-            props: addr_of_mut!(props)
+            props: addr_of_mut!(props),
         };
 
         let inner = WindowBuilder::new()
@@ -149,10 +144,7 @@ impl RWindow {
             .build_action(Box::new(action))
             .build();
 
-        Self {
-            props,
-            inner
-        }
+        Self { props, inner }
     }
 
     pub fn get_proc_address(&self, addr: &str) -> *const c_void {
@@ -170,7 +162,7 @@ impl RWindow {
     }
 
     pub fn handle(&self) -> RawWindowHandle {
-        let mut window_handle = Win32WindowHandle::empty();
+        let window_handle = Win32WindowHandle::empty();
         // window_handle.hwnd = self.hwnd as *mut c_void;
         // window_handle.hinstance = self.hinstance as *mut c_void;
         RawWindowHandle::Win32(window_handle)
@@ -195,33 +187,18 @@ impl RWindow {
     where
         F: Fn(WindowEvent),
     {
-        unsafe {
-            let mut message = core::mem::zeroed();
-
-            while GetMessageW(&mut message, std::ptr::null_mut(), 0, 0) != 0 {
-                DispatchMessageW(&message);
-
-                match message.message {
-                    WM_PAINT => {
-                        callback(WindowEvent::Update);
-                    }
-
-                    WM_CLOSE => {
-                        callback(WindowEvent::CloseRequested);
-                    }
-
-                    WM_KEYDOWN => {
-                        callback(WindowEvent::Keydown(KeyCode(message.wParam as u32)));
-                    }
-
-                    WM_KEYUP => {
-                        callback(WindowEvent::Keyup(KeyCode(message.wParam as u32)));
-                    }
-
-                    _ => {}
+        self.inner.run(|event,control_flow| {
+            match event {
+                gwl::window::WindowEvent::Expose => {
+                    callback(WindowEvent::Update);
+                }
+                gwl::window::WindowEvent::KeyDown(_) => {}
+                gwl::window::WindowEvent::KeyUp(_) => {}
+                gwl::window::WindowEvent::CloseRequested => {
+                    std::process::exit(0);
                 }
             }
-        }
+        });
     }
 
     pub fn swap_buffers(&self) {
@@ -249,7 +226,10 @@ impl RWindow {
         unsafe {
             GetWindowRect(self.props.hwnd.unwrap(), &mut rect);
         }
-        (rect.right.try_into().unwrap(),rect.bottom.try_into().unwrap())
+        (
+            rect.right.try_into().unwrap(),
+            rect.bottom.try_into().unwrap(),
+        )
     }
 
     pub fn get_window_pos(&self) -> (u32, u32) {
