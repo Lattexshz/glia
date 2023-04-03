@@ -23,6 +23,7 @@ use winapi::um::wingdi::{
     ChoosePixelFormat, SetPixelFormat, SwapBuffers, PFD_DOUBLEBUFFER, PFD_DRAW_TO_WINDOW,
     PFD_MAIN_PLANE, PFD_SUPPORT_OPENGL, PFD_TYPE_RGBA, PIXELFORMATDESCRIPTOR,
 };
+use winapi::um::winnt::PCSTR;
 
 pub struct Props {
     hwnd: Option<HWND>,
@@ -183,9 +184,9 @@ impl RWindow {
         }
     }
 
-    pub fn run<F>(&self, callback: F)
+    pub fn run<F>(&self, mut callback: F)
     where
-        F: Fn(WindowEvent),
+        F: FnMut(WindowEvent),
     {
         self.inner.run(|event,control_flow| {
             match event {

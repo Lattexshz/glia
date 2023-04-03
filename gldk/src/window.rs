@@ -52,7 +52,7 @@ impl GLDKWindow {
 
     pub fn run<F>(&self, callback: F)
     where
-        F: Fn(WindowEvent),
+        F: FnMut(WindowEvent),
     {
         self.inner.run(callback);
     }
