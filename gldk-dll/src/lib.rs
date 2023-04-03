@@ -3,7 +3,7 @@
 use gldk::window::{GLDKWindow, WindowEvent};
 use gldk::GLVersion;
 use std::ffi::{c_char, CStr};
-use std::fmt::{Arguments, Display, Formatter};
+use std::fmt::{Display, Formatter};
 
 pub enum GLDKError {
     NullPtr,

@@ -5,6 +5,10 @@ use std::ffi::c_void;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ControlFlow {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WindowEvent {
     Update,
 

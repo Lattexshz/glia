@@ -4,23 +4,24 @@ use core::ffi::c_void;
 use raw_window_handle::{RawWindowHandle, XlibWindowHandle};
 use safex::glx::*;
 use safex::xlib::*;
+use gwl::window::*;
 
-pub struct RWindow {
-    display: Display,
-    window: Window,
-    glc: GLXContext,
-    cmap: ColorMap,
+pub struct Props {
+    glc: Option<GLXContext>,
 }
 
-impl RWindow {
-    pub fn new(width: u32, height: u32, title: &str, conf: GLConfig) -> Self {
+#[derive(Clone,Copy)]
+pub struct BuildAction {
+    conf: GLConfig,
+    props: *mut Props
+}
+
+impl WindowBuildAction for BuildAction {
+    fn override_window_handle(&mut self) -> Option<WindowHandle> {
         let display = Display::open(None);
         let screen = Screen::default(&display);
-        let root = Window::root_window(&display, &screen);
 
-        let cmap = ColorMap::default(&display, &screen);
-
-        let (major, minor) = match conf.version {
+        let (major, minor) = match self.conf.version {
             GLVersion::V3_0 => (3, 0),
             GLVersion::V3_1 => (3, 1),
             GLVersion::V3_2 => (3, 2),
@@ -48,33 +49,68 @@ impl RWindow {
                 GLX_NONE,
             ],
         )
-        .unwrap();
+            .unwrap();
         let window = Window::new_with_glx(
             &display, &screen, &vi, None, 0, 0, width, height, 1, vi.depth, 0, &vi,
         )
-        .unwrap();
+            .unwrap();
 
         let glc = GLXContext::create(&display, &vi, None, gl::TRUE as i32);
         glx_make_current(&display, &window, &glc);
 
+        self.props.glc = Some(glc);
+
         window.map(&display);
         window.set_window_title(title);
 
-        Self {
-            display,
+        let handle = WindowHandle {
             window,
-            glc,
-            cmap,
+            display
+        };
+
+        Some(handle)
+    }
+}
+
+pub struct RWindow {
+    props: Props,
+    inner: Window
+}
+
+impl RWindow {
+    pub fn new(width: u32, height: u32, title: &str, conf: GLConfig) -> Self {
+        let props = Props {
+            glc: None
+        };
+        
+        let action = BuildAction {
+            conf,
+            props: addr_of_mut!(props)
+        };
+
+        let inner = WindowBuilder::new()
+            .title(title)
+            .width(width)
+            .height(height)
+            .build_action(Box::new(action))
+            .build();
+
+
+
+
+        Self {
+            props,
+            inner
         }
     }
 
     pub fn get_proc_address(&self, addr: &str) -> *const c_void {
-        self.glc.get_proc_address(addr).unwrap() as *const c_void
+        self.props.glc.unwrap().get_proc_address(addr).unwrap() as *const c_void
     }
 
     pub fn handle(&self) -> RawWindowHandle {
         let mut window_handle = XlibWindowHandle::empty();
-        window_handle.window = self.window.as_raw();
+        //window_handle.window = self.window.as_raw();
         RawWindowHandle::Xlib(window_handle)
     }
 
@@ -86,11 +122,15 @@ impl RWindow {
         self.window.glx_swap_buffers();
     }
 
+    pub fn make_current(&self) {
+        //glx_make_current(&self.display, &self.window, &self.glc);
+    }
+
     pub fn run<F>(&self, callback: F)
     where
         F: Fn(crate::window::WindowEvent),
     {
-        self.window.run(|event, control_flow| match event {
+        self.inner.run(|event, control_flow| match event {
             WindowEvent::Expose => {
                 callback(crate::window::WindowEvent::Update);
             }
@@ -98,18 +138,18 @@ impl RWindow {
     }
 
     pub fn set_window_title(&self, title: &str) {
-        self.window.set_window_title(title);
+        //self.window.set_window_title(title);
     }
 
     pub fn get_window_size(&self) -> (u32, u32) {
-        let geometry = self.window.get_geometry();
+        //let geometry = self.window.get_geometry();
 
-        (geometry.width, geometry.height)
+        (0,0)
     }
 
     pub fn get_window_pos(&self) -> (u32, u32) {
-        let geometry = self.window.get_geometry();
+        //let geometry = self.window.get_geometry();
 
-        (geometry.x as u32, geometry.y as u32)
+        (0,0)
     }
 }
