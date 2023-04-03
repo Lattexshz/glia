@@ -53,7 +53,7 @@ impl WindowBuildAction for BuildAction {
                 GLX_NONE,
             ],
         )
-        .unwrap();
+            .unwrap();
         let window = unsafe {
             safex::xlib::Window::new_with_glx(
                 &display,
@@ -70,7 +70,7 @@ impl WindowBuildAction for BuildAction {
                 &vi,
             )
         }
-        .unwrap();
+            .unwrap();
 
         let glc = GLXContext::create(&display, &vi, None, gl::TRUE as i32);
         glx_make_current(&display, &window, &glc);
@@ -151,9 +151,9 @@ impl RWindow {
         );
     }
 
-    pub fn run<F>(&self, callback: F)
-    where
-        F: Fn(crate::window::WindowEvent),
+    pub fn run<F>(&self, mut callback: F)
+        where
+            F: FnMut(crate::window::WindowEvent),
     {
         self.inner.run(|event, control_flow| match event {
             WindowEvent::Expose => {
