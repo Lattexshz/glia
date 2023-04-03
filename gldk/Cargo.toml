@@ -34,3 +34,4 @@ gl_generator = "0.14"
 
 [dev-dependencies]
 glm = "0.2.3"
+glu-sys = "0.1.4"

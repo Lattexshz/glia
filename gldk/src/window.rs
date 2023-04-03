@@ -1,5 +1,6 @@
 use crate::platform_impl::window::RWindow;
 use crate::GLConfig;
+use gwl::window::{IWindow};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use std::ffi::c_void;
 
@@ -67,8 +68,22 @@ impl GLDKWindow {
         self.inner.swap_buffers();
     }
 
+    // Common
+
+    pub fn show(&self) {
+        self.inner.show();
+    }
+
+    pub fn hide(&self) {
+        self.inner.hide();
+    }
+
     pub fn set_window_title(&self, title: &str) {
         self.inner.set_window_title(title);
+    }
+
+    pub fn set_window_border_width(&self, width: u32) {
+        self.inner.set_window_border_width(width);
     }
 
     pub fn get_window_size(&self) -> (u32, u32) {
@@ -77,6 +92,10 @@ impl GLDKWindow {
 
     pub fn get_window_pos(&self) -> (u32, u32) {
         self.inner.get_window_pos()
+    }
+
+    pub fn set_undecorated(&self,b: bool) {
+        self.inner.set_undecorated(b);
     }
 }
 

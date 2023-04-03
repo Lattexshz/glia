@@ -53,7 +53,7 @@ impl WindowBuildAction for BuildAction {
                 GLX_NONE,
             ],
         )
-            .unwrap();
+        .unwrap();
         let window = unsafe {
             safex::xlib::Window::new_with_glx(
                 &display,
@@ -70,7 +70,7 @@ impl WindowBuildAction for BuildAction {
                 &vi,
             )
         }
-            .unwrap();
+        .unwrap();
 
         let glc = GLXContext::create(&display, &vi, None, gl::TRUE as i32);
         glx_make_current(&display, &window, &glc);
@@ -152,8 +152,8 @@ impl RWindow {
     }
 
     pub fn run<F>(&self, mut callback: F)
-        where
-            F: FnMut(crate::window::WindowEvent),
+    where
+        F: FnMut(crate::window::WindowEvent),
     {
         self.inner.run(|event, control_flow| match event {
             WindowEvent::Expose => {
@@ -164,19 +164,31 @@ impl RWindow {
         })
     }
 
+    pub fn show(&self) {
+        self.inner.show();
+    }
+
+    pub fn hide(&self) {
+        self.inner.hide();
+    }
+
     pub fn set_window_title(&self, title: &str) {
-        //self.window.set_window_title(title);
+        self.inner.set_window_title(title);
+    }
+
+    pub fn set_window_border_width(&self, width: u32) {
+        self.inner.set_window_border_width(width);
     }
 
     pub fn get_window_size(&self) -> (u32, u32) {
-        //let geometry = self.window.get_geometry();
-
-        (0, 0)
+        self.inner.get_window_size()
     }
 
     pub fn get_window_pos(&self) -> (u32, u32) {
-        //let geometry = self.window.get_geometry();
+        self.inner.get_window_pos()
+    }
 
-        (0, 0)
+    pub fn set_undecorated(&self,b: bool) {
+        self.inner.set_undecorated(b);
     }
 }

@@ -1,9 +1,7 @@
 use crate::sys::{wgl, wgl_extra};
-use crate::window::{KeyCode, WindowEvent, WindowID};
+use crate::window::{WindowEvent, WindowID};
 use core::ffi::c_void;
-use std::ffi::{CString};
-
-
+use std::ffi::CString;
 
 use raw_window_handle::{RawWindowHandle, Win32WindowHandle};
 
@@ -15,7 +13,7 @@ use winapi::um::winuser::*;
 
 use crate::sys::wgl_extra::types::HGLRC;
 use winapi::shared::minwindef::*;
-use winapi::shared::ntdef::*;
+
 use winapi::shared::windef::*;
 
 use winapi::um::libloaderapi::{GetModuleHandleA, GetProcAddress};
@@ -188,16 +186,14 @@ impl RWindow {
     where
         F: FnMut(WindowEvent),
     {
-        self.inner.run(|event,control_flow| {
-            match event {
-                gwl::window::WindowEvent::Expose => {
-                    callback(WindowEvent::Update);
-                }
-                gwl::window::WindowEvent::KeyDown(_) => {}
-                gwl::window::WindowEvent::KeyUp(_) => {}
-                gwl::window::WindowEvent::CloseRequested => {
-                    std::process::exit(0);
-                }
+        self.inner.run(|event, _control_flow| match event {
+            gwl::window::WindowEvent::Expose => {
+                callback(WindowEvent::Update);
+            }
+            gwl::window::WindowEvent::KeyDown(_) => {}
+            gwl::window::WindowEvent::KeyUp(_) => {}
+            gwl::window::WindowEvent::CloseRequested => {
+                std::process::exit(0);
             }
         });
     }
@@ -209,41 +205,31 @@ impl RWindow {
         }
     }
 
+    pub fn show(&self) {
+        self.inner.show();
+    }
+
+    pub fn hide(&self) {
+        self.inner.hide();
+    }
+
     pub fn set_window_title(&self, title: &str) {
-        unsafe {
-            let hwnd = self.props.hwnd.unwrap();
-            SetWindowTextA(hwnd, title.as_ptr() as *const i8);
-        }
+        self.inner.set_window_title(title);
+    }
+
+    pub fn set_window_border_width(&self, width: u32) {
+        self.inner.set_window_border_width(width);
     }
 
     pub fn get_window_size(&self) -> (u32, u32) {
-        let mut rect = RECT {
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-        };
-
-        unsafe {
-            GetWindowRect(self.props.hwnd.unwrap(), &mut rect);
-        }
-        (
-            rect.right.try_into().unwrap(),
-            rect.bottom.try_into().unwrap(),
-        )
+        self.inner.get_window_size()
     }
 
     pub fn get_window_pos(&self) -> (u32, u32) {
-        // let mut rect = RECT {
-        //     left: 0,
-        //     top: 0,
-        //     right: 0,
-        //     bottom: 0,
-        // };
-        //
-        // unsafe {
-        //     GetWindowRect(self.hwnd, &mut rect);
-        // }
-        (0, 0)
+        self.inner.get_window_pos()
+    }
+
+    pub fn set_undecorated(&self,b: bool) {
+        self.inner.set_undecorated(b);
     }
 }

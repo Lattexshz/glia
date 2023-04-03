@@ -1,11 +1,11 @@
+use gl::types::*;
+use gldk::window::{GLDKWindow, WindowEvent};
+use gldk::{GLConfig, GLVersion};
+use glm::Vector3;
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::mem::size_of;
 use std::ptr;
-use glm::Vector3;
-use gl::types::*;
 use winapi::um::gl::gl::{GLenum, GLint, GLuint};
-use gldk::{GLConfig, GLVersion};
-use gldk::window::{GLDKWindow, WindowEvent};
 
 static VS_SRC: &'static str = "
 #version 400
@@ -32,15 +32,33 @@ void main() {
 }";
 
 fn main() {
-    let window = GLDKWindow::new(500, 500, "GLDK example", Some(GLConfig {
-        version: GLVersion::V4_0,
-    }));
+    let window = GLDKWindow::new(
+        500,
+        500,
+        "GLDK example",
+        Some(GLConfig {
+            version: GLVersion::V4_0,
+        }),
+    );
 
     window.make_current();
     gl::load_with(|s| window.get_proc_address(s));
 
     unsafe {
-        println!("{} {} {}",CStr::from_ptr(gl::GetString(gl::VERSION) as *const c_char).to_str().unwrap(),CStr::from_ptr(gl::GetString(gl::VENDOR) as *const c_char).to_str().unwrap(),CStr::from_ptr(gl::GetString(gl::RENDERER) as *const c_char).to_str().unwrap())
+        gl::DepthFunc(gl::LEQUAL);
+        gl::Enable(gl::DEPTH_TEST);
+        println!(
+            "{} {} {}",
+            CStr::from_ptr(gl::GetString(gl::VERSION) as *const c_char)
+                .to_str()
+                .unwrap(),
+            CStr::from_ptr(gl::GetString(gl::VENDOR) as *const c_char)
+                .to_str()
+                .unwrap(),
+            CStr::from_ptr(gl::GetString(gl::RENDERER) as *const c_char)
+                .to_str()
+                .unwrap()
+        )
     }
 
     let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
@@ -50,11 +68,11 @@ fn main() {
     let vertices = [
         // Triangle
         // Top
-        glm::vec3(0.0,0.5, 0.0),
+        glm::vec3(0.0, 0.5, 0.0),
         // Left
         glm::vec3(-0.5, -0.5, 0.0),
         // Right
-        glm::vec3(0.5,-0.5, 0.0),
+        glm::vec3(0.5, -0.5, 0.0),
     ];
 
     let colors = [
@@ -67,17 +85,18 @@ fn main() {
         glm::vec3(0.0, 0.0, 1.0),
     ];
 
-    let triangle = Mesh::new(&vertices, &colors);
+    window.show();
 
     window.run(|event| match event {
         WindowEvent::Update => {
             unsafe {
-                gl::ClearColor(0.0,0.0,0.0, 1.0);
-                gl::Clear(gl::COLOR_BUFFER_BIT|gl::DEPTH_BUFFER_BIT);
+                gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                 gl::UseProgram(program);
-                triangle.draw();
-
             }
+
+            let triangle = Mesh::new(&vertices, &colors);
+
+            triangle.draw();
 
             window.swap_buffers();
         }
@@ -162,30 +181,44 @@ pub struct Mesh {
     vertices: VBO,
     colors: VBO,
 
-    vao: VAO
+    vao: VAO,
 }
 
 impl Mesh {
-    pub fn new(vertices: &[Vector3<f32>],colors: &[Vector3<f32>]) -> Self {
+    pub fn new(vertices: &[Vector3<f32>], colors: &[Vector3<f32>]) -> Self {
         unsafe {
             let mut vao = 0;
             let mut vertices_vbo = 0;
             let mut colors_vbo = 0;
 
-            gl::GenVertexArrays(1,&mut vao);
+            gl::GenVertexArrays(1, &mut vao);
             gl::BindVertexArray(vao);
 
-            gl::GenBuffers(1,&mut vertices_vbo);
+            gl::GenBuffers(1, &mut vertices_vbo);
             gl::BindBuffer(gl::ARRAY_BUFFER, vertices_vbo);
-            gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * size_of::<Vector3<f32>>()).try_into().unwrap(),vertices.as_ptr() as *const c_void,gl::STATIC_DRAW);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (vertices.len() * size_of::<Vector3<f32>>())
+                    .try_into()
+                    .unwrap(),
+                vertices.as_ptr() as *const c_void,
+                gl::STATIC_DRAW,
+            );
             gl::EnableVertexAttribArray(0);
-            gl::VertexAttribPointer(0,3,gl::FLOAT,gl::FALSE,0,0 as *const c_void);
+            gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 0, 0 as *const c_void);
 
-            gl::GenBuffers(1,&mut colors_vbo);
+            gl::GenBuffers(1, &mut colors_vbo);
             gl::BindBuffer(gl::ARRAY_BUFFER, colors_vbo);
-            gl::BufferData(gl::ARRAY_BUFFER, (colors.len() * size_of::<Vector3<f32>>()).try_into().unwrap(),colors.as_ptr() as *const c_void,gl::STATIC_DRAW);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (colors.len() * size_of::<Vector3<f32>>())
+                    .try_into()
+                    .unwrap(),
+                colors.as_ptr() as *const c_void,
+                gl::STATIC_DRAW,
+            );
             gl::EnableVertexAttribArray(1);
-            gl::VertexAttribPointer(1,3,gl::FLOAT,gl::FALSE,0,0 as *const c_void);
+            gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE, 0, 0 as *const c_void);
 
             Self {
                 vertices: vertices_vbo,
