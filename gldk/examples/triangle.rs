@@ -97,7 +97,6 @@ fn main() {
             let triangle = Mesh::new(&vertices, &colors);
 
             triangle.draw();
-
             window.swap_buffers();
         }
 

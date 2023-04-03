@@ -7,17 +7,20 @@ use std::fmt::{Display, Formatter};
 
 pub enum GLDKError {
     NullPtr,
+    InvalidBool
 }
 
 impl Display for GLDKError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             GLDKError::NullPtr => write!(f, "NullPtr(00001): Invalid pointer passed."),
+            GLDKError::InvalidBool => write!(f,"InvalidBool(00002): Invalid boolean type passed"),
         }
     }
 }
 
 fn panic_gldk(error: GLDKError) {
+    println!();
     println!("GLDK error {}", error);
     std::process::exit(1);
 }
@@ -63,7 +66,7 @@ pub extern "C" fn gldkCreateWindow(
 pub type CALLBACKPROC = extern "C" fn(WindowEvent);
 
 #[no_mangle]
-pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow, callback: CALLBACKPROC) {
+pub extern "C" fn gldkRunWindow(window: *mut GLDKWindow, callback: CALLBACKPROC) {
     if window.is_null() {
         panic_gldk(GLDKError::NullPtr);
     }
@@ -73,6 +76,43 @@ pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow, callback: CALLBACKPROC
     window.run(|event| {
         callback(event);
     });
+}
+
+#[no_mangle]
+pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    let window = unsafe { &*window };
+
+    window.show();
+}
+
+#[no_mangle]
+pub extern "C" fn gldkHideWindow(window: *mut GLDKWindow) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    let window = unsafe { &*window };
+
+    window.hide();
+}
+
+#[no_mangle]
+pub extern "C" fn gldkSetUndecoratedWindow(window: *mut GLDKWindow,bool: u8) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    if bool >= 2 {
+        panic_gldk(GLDKError::InvalidBool);
+    }
+
+    let window = unsafe { &*window };
+
+    window.set_undecorated(bool != 0);
 }
 
 #[no_mangle]

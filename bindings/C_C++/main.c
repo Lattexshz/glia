@@ -13,9 +13,12 @@ void callback(WindowEvent event) {
 int main() {
     GLConfig config;
     config.version = V4_6;
-    //window = gldkCreateWindow(200,200,"GLDK from C!",config);
+    window = gldkCreateWindow(200,200,"GLDK from C!",config);
     gldkMakeCurrent(window);
-    gldkShowWindow(window,callback);
+    printf("%s",glGetString(GL_VERSION));
+    gldkShowWindow(window);
+    gldkSetUndecoratedWindow(window,8);
+    gldkRunWindow(window,callback);
     return 0;
 }
 
