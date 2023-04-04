@@ -42,6 +42,8 @@ fn main() {
     );
 
     window.make_current();
+    window.swap_interval(true);
+
     gl::load_with(|s| window.get_proc_address(s));
 
     unsafe {
@@ -85,6 +87,8 @@ fn main() {
         glm::vec3(0.0, 0.0, 1.0),
     ];
 
+    let triangle = Mesh::new(&vertices, &colors);
+
     window.show();
 
     window.run(|event| match event {
@@ -93,8 +97,6 @@ fn main() {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                 gl::UseProgram(program);
             }
-
-            let triangle = Mesh::new(&vertices, &colors);
 
             triangle.draw();
             window.swap_buffers();

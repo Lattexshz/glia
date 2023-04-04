@@ -116,6 +116,21 @@ pub extern "C" fn gldkSetUndecoratedWindow(window: *mut GLDKWindow,bool: u8) {
 }
 
 #[no_mangle]
+pub extern "C" fn gldkSwapInterval(window: *mut GLDKWindow,bool: u8) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    if bool >= 2 {
+        panic_gldk(GLDKError::InvalidBool);
+    }
+
+    let window = unsafe { &*window };
+
+    window.swap_interval(bool != 0);
+}
+
+#[no_mangle]
 pub extern "C" fn gldkMakeCurrent(window: *mut GLDKWindow) {
     if window.is_null() {
         panic_gldk(GLDKError::NullPtr);

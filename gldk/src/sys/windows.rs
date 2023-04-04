@@ -15,8 +15,11 @@ pub type WGLCREATECONTEXTATTRIBSARBPROC = fn(
     attribs: &[wgl_extra::types::GLenum],
 ) -> wgl_extra::types::HGLRC;
 
+pub type WGLSWAPINTERVALEXTPROC = fn(i:u32);
+
 pub struct WGLARBFunctions {
     pub wglCreateContextAttribsARB: WGLCREATECONTEXTATTRIBSARBPROC,
+    pub wglSwapIntervalEXT: WGLSWAPINTERVALEXTPROC
 }
 
 impl WGLARBFunctions {
@@ -26,8 +29,14 @@ impl WGLARBFunctions {
                 "wglCreateContextAttribsARB\0".as_ptr() as wgl::types::LPCSTR
             ))
         };
+        let wglSwapIntervalEXT: WGLSWAPINTERVALEXTPROC = unsafe {
+            transmute(wgl::GetProcAddress(
+                "wglSwapIntervalEXT\0".as_ptr() as wgl::types::LPCSTR
+            ))
+        };
         Self {
             wglCreateContextAttribsARB,
+            wglSwapIntervalEXT,
         }
     }
 }

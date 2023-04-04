@@ -1,4 +1,4 @@
-use crate::sys::{wgl, wgl_extra};
+use crate::sys::{wgl, wgl_extra, WGLARBFunctions};
 use crate::window::{WindowEvent, WindowID};
 use core::ffi::c_void;
 use std::ffi::CString;
@@ -22,10 +22,12 @@ use winapi::um::wingdi::{
     PFD_MAIN_PLANE, PFD_SUPPORT_OPENGL, PFD_TYPE_RGBA, PIXELFORMATDESCRIPTOR,
 };
 use winapi::um::winnt::PCSTR;
+use crate::sys::wgl_extra::Wgl;
 
 pub struct Props {
     hwnd: Option<HWND>,
     hinstance: Option<HINSTANCE>,
+    wgl: Option<WGLARBFunctions>,
     ctx: Option<HGLRC>,
 }
 
@@ -112,6 +114,7 @@ impl WindowBuildAction for BuildAction {
                 (func.wglCreateContextAttribsARB)(hdc as wgl_extra::types::HDC, null_mut(), &att);
 
             (*self.props).ctx = Some(ctx);
+            (*self.props).wgl = Some(func);
 
             wgl::DeleteContext(old_ctx);
         }
@@ -128,6 +131,7 @@ impl RWindow {
         let mut props = Props {
             hwnd: None,
             hinstance: None,
+            wgl: None,
             ctx: None,
         };
 
@@ -180,6 +184,11 @@ impl RWindow {
                 ctx as crate::sys::wgl::types::HGLRC,
             );
         }
+    }
+
+    pub fn swap_interval(&self,enable: bool) {
+        let wgl = self.props.wgl.as_ref().unwrap();
+        (wgl.wglSwapIntervalEXT)(enable as u32);
     }
 
     pub fn run<F>(&self, mut callback: F)

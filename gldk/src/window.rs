@@ -68,6 +68,10 @@ impl GLDKWindow {
         self.inner.swap_buffers();
     }
 
+    pub fn swap_interval(&self,enable: bool) {
+        self.inner.swap_interval(enable);
+    }
+
     // Common
 
     pub fn show(&self) {
