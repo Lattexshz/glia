@@ -37,9 +37,9 @@ fn main() {
         500,
         "GLDK example",
         Some(GLConfig {
-            version: GLVersion::V4_0,
+            version: GLVersion::V3_3,
         }),
-    );
+    ).unwrap();
 
     window.make_current();
     window.swap_interval(true);
