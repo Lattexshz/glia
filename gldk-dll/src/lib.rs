@@ -2,7 +2,7 @@
 
 use gldk::window::{GLDKWindow, WindowEvent};
 use gldk::GLVersion;
-use std::ffi::{c_char, CStr};
+use std::ffi::{c_char, c_void, CStr};
 use std::fmt::{Display, Formatter};
 
 pub enum GLDKError {
@@ -59,7 +59,7 @@ pub extern "C" fn gldkCreateWindow(
         version: config.version,
     };
 
-    let b = Box::new(GLDKWindow::new(width, height, title, Some(config)));
+    let b = Box::new(GLDKWindow::new(width, height, title, Some(config)).unwrap());
     Box::into_raw(b)
 }
 
@@ -148,6 +148,18 @@ pub extern "C" fn gldkSwapBuffers(window: *mut GLDKWindow) {
 
     let window = unsafe { &*window };
     window.swap_buffers();
+}
+
+#[no_mangle]
+pub extern "C" fn gldkGetProcAddress(window: *mut GLDKWindow,s: *const c_char) -> *const c_void {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    let window = unsafe { &*window };
+    unsafe {
+        window.get_proc_address(CStr::from_ptr(s).to_str().unwrap())
+    }
 }
 
 #[no_mangle]

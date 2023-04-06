@@ -29,6 +29,7 @@ GLDKWindow *gldkCreateWindow(unsigned int width,unsigned int height,const char *
 
 void gldkMakeCurrent(GLDKWindow *window);
 void gldkSwapBuffers(GLDKWindow *window);
+void *gldkGetProcAddress(GLDKWindow *window,const char *s);
 
 void gldkRunWindow(GLDKWindow *window,void (* callback)(WindowEvent));
 void gldkShowWindow(GLDKWindow *window);
