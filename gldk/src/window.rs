@@ -11,7 +11,7 @@ pub struct ControlFlow {}
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WindowEvent {
-    Update,
+    RedrawRequested,
 
     Keyup(KeyCode),
     Keydown(KeyCode),

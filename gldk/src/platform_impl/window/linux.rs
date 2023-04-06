@@ -156,11 +156,14 @@ impl RWindow {
         F: FnMut(crate::window::WindowEvent),
     {
         self.inner.run(|event, control_flow| match event {
-            WindowEvent::Expose => {
-                callback(crate::window::WindowEvent::Update);
+            gwl::window::WindowEvent::Expose => {
+                callback(WindowEvent::RedrawRequested);
             }
-
-            _ => {}
+            gwl::window::WindowEvent::KeyDown(c) => callback(WindowEvent::Keydown(KeyCode(c))),
+            gwl::window::WindowEvent::KeyUp(c) => callback(WindowEvent::Keyup(KeyCode(c))),
+            gwl::window::WindowEvent::CloseRequested => {
+                callback(WindowEvent::CloseRequested)
+            }
         })
     }
 

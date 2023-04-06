@@ -1,5 +1,5 @@
 use crate::sys::{glGetError, wgl, wgl_extra, WGLARBFunctions};
-use crate::window::{WindowEvent, WindowID};
+use crate::window::{KeyCode, WindowEvent, WindowID};
 use core::ffi::c_void;
 use std::ffi::CString;
 
@@ -214,12 +214,12 @@ impl RWindow {
     {
         self.inner.run(|event, _control_flow| match event {
             gwl::window::WindowEvent::Expose => {
-                callback(WindowEvent::Update);
+                callback(WindowEvent::RedrawRequested);
             }
-            gwl::window::WindowEvent::KeyDown(_) => {}
-            gwl::window::WindowEvent::KeyUp(_) => {}
+            gwl::window::WindowEvent::KeyDown(c) => callback(WindowEvent::Keydown(KeyCode(c))),
+            gwl::window::WindowEvent::KeyUp(c) => callback(WindowEvent::Keyup(KeyCode(c))),
             gwl::window::WindowEvent::CloseRequested => {
-                std::process::exit(0);
+                callback(WindowEvent::CloseRequested)
             }
         });
     }

@@ -92,7 +92,7 @@ fn main() {
     window.show();
 
     window.run(|event| match event {
-        WindowEvent::Update => {
+        WindowEvent::RedrawRequested => {
             unsafe {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                 gl::UseProgram(program);
