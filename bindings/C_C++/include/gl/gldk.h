@@ -14,7 +14,10 @@ typedef enum glversion {
 } GLVersion;
 
 typedef enum windowevent {
-    Update
+    RedrawRequested,
+    Keydown,
+    Keyup,
+    CloseRequested
 } WindowEvent;
 
 typedef struct glconfig {
@@ -38,3 +41,6 @@ void gldkGetWindowSize(GLDKWindow *window,unsigned int *width,unsigned int *heig
 void gldkGetWindowPos(GLDKWindow *window,unsigned int *x,unsigned int *y);
 void gldkSetUndecoratedWindow(GLDKWindow *window,unsigned char bool);
 void gldkHideWindow(GLDKWindow *window);
+
+char gldkGetLatestDownedKey();
+char gldkGetLatestUppedKey();

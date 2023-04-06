@@ -1,5 +1,5 @@
 use gl::types::*;
-use gldk::window::{GLDKWindow, WindowEvent};
+use gldk::window::{GLDKWindow, KeyCode, WindowEvent};
 use gldk::{GLConfig, GLVersion};
 use glm::Vector3;
 use std::ffi::{c_char, c_void, CStr, CString};
@@ -100,6 +100,10 @@ fn main() {
 
             triangle.draw();
             window.swap_buffers();
+        }
+
+        WindowEvent::Keydown(code) => {
+
         }
 
         _ => {}

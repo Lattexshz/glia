@@ -23,6 +23,12 @@ pub enum WindowEvent {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct KeyCode(pub u32);
 
+impl Into<char> for KeyCode {
+    fn into(self) -> char {
+        std::char::from_u32(self.0).unwrap()
+    }
+}
+
 #[repr(C)]
 pub struct WindowID(pub u64);
 

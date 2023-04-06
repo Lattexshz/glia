@@ -216,7 +216,9 @@ impl RWindow {
             gwl::window::WindowEvent::Expose => {
                 callback(WindowEvent::RedrawRequested);
             }
-            gwl::window::WindowEvent::KeyDown(c) => callback(WindowEvent::Keydown(KeyCode(c))),
+            gwl::window::WindowEvent::KeyDown(c) =>  {
+                callback(WindowEvent::Keydown(KeyCode(c)))
+            },
             gwl::window::WindowEvent::KeyUp(c) => callback(WindowEvent::Keyup(KeyCode(c))),
             gwl::window::WindowEvent::CloseRequested => {
                 callback(WindowEvent::CloseRequested)

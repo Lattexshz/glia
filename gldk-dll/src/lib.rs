@@ -1,13 +1,38 @@
 #![no_main]
 
-use gldk::window::{GLDKWindow, WindowEvent};
+use gldk::window::GLDKWindow;
 use gldk::GLVersion;
 use std::ffi::{c_char, c_void, CStr};
 use std::fmt::{Display, Formatter};
+use std::sync::Mutex;
+use once_cell::unsync::OnceCell;
+
+static DOWNED_KEY:Mutex<OnceCell<u32>> = Mutex::new(OnceCell::new());
+static UPPED_KEY:Mutex<OnceCell<u32>> = Mutex::new(OnceCell::new());
+
 
 pub enum GLDKError {
     NullPtr,
     InvalidBool
+}
+
+#[repr(C)]
+pub enum WindowEvent {
+    RedrawRequested,
+    Keydown,
+    Keyup,
+    CloseRequested
+}
+
+impl Into<WindowEvent> for gldk::window::WindowEvent {
+    fn into(self) -> WindowEvent {
+        match self {
+            gldk::window::WindowEvent::RedrawRequested => WindowEvent::CloseRequested,
+            gldk::window::WindowEvent::Keyup(_) => WindowEvent::Keyup,
+            gldk::window::WindowEvent::Keydown(_) => WindowEvent::Keydown,
+            gldk::window::WindowEvent::CloseRequested => WindowEvent::CloseRequested,
+        }
+    }
 }
 
 impl Display for GLDKError {
@@ -74,7 +99,16 @@ pub extern "C" fn gldkRunWindow(window: *mut GLDKWindow, callback: CALLBACKPROC)
     let window = unsafe { &*window };
 
     window.run(|event| {
-        callback(event);
+        match event {
+            gldk::window::WindowEvent::Keyup(c) => {
+                UPPED_KEY.lock().unwrap().set(c.0).unwrap()
+            }
+            gldk::window::WindowEvent::Keydown(c) => {
+                DOWNED_KEY.lock().unwrap().set(c.0).unwrap()
+            }
+            _ => {}
+        }
+        callback(event.into());
     });
 }
 
@@ -197,4 +231,14 @@ pub extern "C" fn gldkGetWindowPos(window: *mut GLDKWindow, x_ptr: &mut u32, y_p
     let (x, y) = window.get_window_pos();
     *x_ptr = x;
     *y_ptr = y;
+}
+
+#[no_mangle]
+pub extern "C" fn gldkGetLatestDownedKey() -> u32 {
+    *DOWNED_KEY.lock().unwrap().get().unwrap()
+}
+
+#[no_mangle]
+pub extern "C" fn gldkGetLatestUppedKey() -> u32 {
+    *UPPED_KEY.lock().unwrap().get().unwrap()
 }
