@@ -23,7 +23,6 @@ use winapi::um::wingdi::{
 };
 use winapi::um::winnt::PCSTR;
 use crate::error::GLDKError;
-use crate::sys::wgl_extra::Wgl;
 
 pub struct Props {
     hwnd: Option<HWND>,

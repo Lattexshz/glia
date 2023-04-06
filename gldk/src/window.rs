@@ -1,6 +1,5 @@
 use crate::platform_impl::window::RWindow;
 use crate::GLConfig;
-use gwl::window::{IWindow};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use std::ffi::c_void;
 use crate::error::GLDKError;
