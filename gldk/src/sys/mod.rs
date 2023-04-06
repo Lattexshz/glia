@@ -12,3 +12,7 @@ pub use self::macos::*;
 pub mod windows;
 #[cfg(target_os = "windows")]
 pub use self::windows::*;
+
+extern "C" {
+    pub fn glGetError() -> u16;
+}

@@ -1,6 +1,7 @@
 mod platform_impl;
 mod sys;
 pub mod window;
+pub mod error;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]

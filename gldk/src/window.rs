@@ -1,8 +1,8 @@
 use crate::platform_impl::window::RWindow;
 use crate::GLConfig;
-use gwl::window::{IWindow};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use std::ffi::c_void;
+use crate::error::GLDKError;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -32,15 +32,20 @@ pub struct GLDKWindow {
 }
 
 impl GLDKWindow {
-    pub fn new(width: u32, height: u32, title: &str, conf: Option<GLConfig>) -> Self {
+    pub fn new(width: u32, height: u32, title: &str, conf: Option<GLConfig>) -> Result<Self,GLDKError> {
         let conf = match conf {
             None => GLConfig::default(),
             Some(c) => c,
         };
 
-        Self {
-            inner: RWindow::new(width, height, title, conf),
-        }
+        let inner = match RWindow::new(width, height, title, conf) {
+            Ok(i) => i,
+            Err(e) => return Err(e)
+        };
+
+        Ok(Self {
+            inner
+        })
     }
 
     pub fn id(&self) -> WindowID {

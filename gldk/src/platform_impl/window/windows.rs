@@ -1,4 +1,4 @@
-use crate::sys::{wgl, wgl_extra, WGLARBFunctions};
+use crate::sys::{glGetError, wgl, wgl_extra, WGLARBFunctions};
 use crate::window::{WindowEvent, WindowID};
 use core::ffi::c_void;
 use std::ffi::CString;
@@ -22,7 +22,7 @@ use winapi::um::wingdi::{
     PFD_MAIN_PLANE, PFD_SUPPORT_OPENGL, PFD_TYPE_RGBA, PIXELFORMATDESCRIPTOR,
 };
 use winapi::um::winnt::PCSTR;
-use crate::sys::wgl_extra::Wgl;
+use crate::error::GLDKError;
 
 pub struct Props {
     hwnd: Option<HWND>,
@@ -31,10 +31,10 @@ pub struct Props {
     ctx: Option<HGLRC>,
 }
 
-#[derive(Clone, Copy)]
 pub struct BuildAction {
     conf: GLConfig,
     props: *mut Props,
+    error: Option<GLDKError>
 }
 
 impl WindowBuildAction for BuildAction {
@@ -92,7 +92,16 @@ impl WindowBuildAction for BuildAction {
 
             let hdc = GetDC(handle.hwnd);
             let pixel_format = ChoosePixelFormat(hdc, addr_of!(pfd));
-            SetPixelFormat(hdc, pixel_format, addr_of!(pfd));
+
+            if pixel_format == 0 {
+                self.error = Some(GLDKError::new_unexpected("Pixel format is null.".to_owned()));
+                return;
+            }
+
+            if SetPixelFormat(hdc, pixel_format, addr_of!(pfd)) == 0 {
+                self.error = Some(GLDKError::new_unexpected("Can't set pixel format.".to_owned()));
+                return;
+            }
 
             let old_ctx = wgl::CreateContext(hdc as wgl::types::HDC);
             wgl::MakeCurrent(hdc as wgl::types::HDC, old_ctx);
@@ -127,7 +136,7 @@ pub struct RWindow {
 }
 
 impl RWindow {
-    pub fn new(width: u32, height: u32, title: &str, conf: GLConfig) -> Self {
+    pub fn new(width: u32, height: u32, title: &str, conf: GLConfig) -> Result<Self,GLDKError> {
         let mut props = Props {
             hwnd: None,
             hinstance: None,
@@ -135,19 +144,26 @@ impl RWindow {
             ctx: None,
         };
 
-        let action = BuildAction {
+        let mut action = BuildAction {
             conf,
             props: addr_of_mut!(props),
+            error: None,
         };
 
-        let inner = WindowBuilder::new()
+        let inner = WindowBuilder::new(Box::new(&mut action))
             .title(title)
             .width(width)
             .height(height)
-            .build_action(Box::new(action))
             .build();
 
-        Self { props, inner }
+        match action.error.take() {
+            None => {}
+            Some(e) => {
+                return Err(e);
+            }
+        }
+
+        Ok(Self { props, inner })
     }
 
     pub fn get_proc_address(&self, addr: &str) -> *const c_void {
@@ -165,14 +181,15 @@ impl RWindow {
     }
 
     pub fn handle(&self) -> RawWindowHandle {
-        let window_handle = Win32WindowHandle::empty();
-        // window_handle.hwnd = self.hwnd as *mut c_void;
-        // window_handle.hinstance = self.hinstance as *mut c_void;
+        let instance = self.inner.get_instance();
+        let mut window_handle = Win32WindowHandle::empty();
+        window_handle.hwnd = instance.hwnd as *mut c_void;
+        window_handle.hinstance = instance.hinstance as *mut c_void;
         RawWindowHandle::Win32(window_handle)
     }
 
     pub fn id(&self) -> WindowID {
-        WindowID(0)
+        WindowID(self.inner.get_instance().hwnd as u64)
     }
 
     pub fn make_current(&self) {
