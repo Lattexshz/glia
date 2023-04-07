@@ -41,6 +41,8 @@ void gldkGetWindowSize(GLDKWindow *window,unsigned int *width,unsigned int *heig
 void gldkGetWindowPos(GLDKWindow *window,unsigned int *x,unsigned int *y);
 void gldkSetUndecoratedWindow(GLDKWindow *window,unsigned char bool);
 void gldkHideWindow(GLDKWindow *window);
+void gldkSetWindowMinimized(GLDKWindow *window,unsigned char bool);
+void gldkSetWindowMaximized(GLDKWindow *window,unsigned char bool);
 
 char gldkGetLatestDownedKey();
 char gldkGetLatestUppedKey();

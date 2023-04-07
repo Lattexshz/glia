@@ -260,4 +260,12 @@ impl RWindow {
     pub fn set_undecorated(&self,b: bool) {
         self.inner.set_undecorated(b);
     }
+
+    pub fn set_maximized(&self, maximized: bool) {
+        self.inner.set_maximized(maximized);
+    }
+
+    pub fn set_minimized(&self, minimized: bool) {
+        self.inner.set_minimized(minimized);
+    }
 }

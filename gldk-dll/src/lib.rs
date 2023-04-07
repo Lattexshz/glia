@@ -234,6 +234,36 @@ pub extern "C" fn gldkGetWindowPos(window: *mut GLDKWindow, x_ptr: &mut u32, y_p
 }
 
 #[no_mangle]
+pub extern "C" fn gldkSetWindowMinimized(window: *mut GLDKWindow,bool: u8) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    if bool >= 2 {
+        panic_gldk(GLDKError::InvalidBool);
+    }
+
+    let window = unsafe { &*window };
+
+    window.set_minimized(bool != 0);
+}
+
+#[no_mangle]
+pub extern "C" fn gldkSetWindowMaximized(window: *mut GLDKWindow,bool: u8) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    if bool >= 2 {
+        panic_gldk(GLDKError::InvalidBool);
+    }
+
+    let window = unsafe { &*window };
+
+    window.set_maximized(bool != 0);
+}
+
+#[no_mangle]
 pub extern "C" fn gldkGetLatestDownedKey() -> u32 {
     *DOWNED_KEY.lock().unwrap().get().unwrap()
 }
