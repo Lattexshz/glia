@@ -34,7 +34,7 @@ void gldkMakeCurrent(GLDKWindow *window);
 void gldkSwapBuffers(GLDKWindow *window);
 void *gldkGetProcAddress(GLDKWindow *window,const char *s);
 
-void gldkRunWindow(GLDKWindow *window,void (* callback)(WindowEvent));
+void gldkRunWindow(GLDKWindow *window);
 void gldkShowWindow(GLDKWindow *window);
 void gldkSetWindowTitle(GLDKWindow *window,const char *title);
 void gldkGetWindowSize(GLDKWindow *window,unsigned int *width,unsigned int *height);
@@ -44,5 +44,7 @@ void gldkHideWindow(GLDKWindow *window);
 void gldkSetWindowMinimized(GLDKWindow *window,unsigned char bool);
 void gldkSetWindowMaximized(GLDKWindow *window,unsigned char bool);
 
-char gldkGetLatestDownedKey();
-char gldkGetLatestUppedKey();
+void gldkSetRedrawRequestedCallback(void (* callback)());
+void gldkSetCloseRequestedCallback(void (* callback)());
+void gldkSetKeyDownedCallBack(void (* callback)(unsigned int));
+void gldkSetKeyUppedCallBack(void (* callback)(unsigned int));

@@ -10,7 +10,6 @@ use once_cell::unsync::OnceCell;
 static DOWNED_KEY:Mutex<OnceCell<u32>> = Mutex::new(OnceCell::new());
 static UPPED_KEY:Mutex<OnceCell<u32>> = Mutex::new(OnceCell::new());
 
-
 pub enum GLDKError {
     NullPtr,
     InvalidBool
@@ -88,10 +87,8 @@ pub extern "C" fn gldkCreateWindow(
     Box::into_raw(b)
 }
 
-pub type CALLBACKPROC = extern "C" fn(WindowEvent);
-
 #[no_mangle]
-pub extern "C" fn gldkRunWindow(window: *mut GLDKWindow, callback: CALLBACKPROC) {
+pub extern "C" fn gldkRunWindow(window: *mut GLDKWindow) {
     if window.is_null() {
         panic_gldk(GLDKError::NullPtr);
     }
@@ -106,9 +103,16 @@ pub extern "C" fn gldkRunWindow(window: *mut GLDKWindow, callback: CALLBACKPROC)
             gldk::window::WindowEvent::Keydown(c) => {
                 DOWNED_KEY.lock().unwrap().set(c.0).unwrap()
             }
+            gldk::window::WindowEvent::RedrawRequested => {
+                match REDRAW_REQUESTED.lock().unwrap().get() {
+                    None => {}
+                    Some(c) => {
+                        c();
+                    }
+                }
+            }
             _ => {}
         }
-        callback(event.into());
     });
 }
 
@@ -263,12 +267,32 @@ pub extern "C" fn gldkSetWindowMaximized(window: *mut GLDKWindow,bool: u8) {
     window.set_maximized(bool != 0);
 }
 
+// Callbacks
+static REDRAW_REQUESTED:Mutex<OnceCell<REDRAWREQUESTEDCALLBACK>> = Mutex::new(OnceCell::new());
+static CLOSE_REQUESTED:Mutex<OnceCell<CLOSEREQUESTEDCALLBACK>> = Mutex::new(OnceCell::new());
+static KEY_DOWNED:Mutex<OnceCell<KEYDOWNEDCALLBACK>> = Mutex::new(OnceCell::new());
+static KEY_UPPED:Mutex<OnceCell<KEYUPPEDCALLBACK>> = Mutex::new(OnceCell::new());
+
+pub type REDRAWREQUESTEDCALLBACK = extern "C" fn();
+pub type CLOSEREQUESTEDCALLBACK = extern "C" fn();
+pub type KEYDOWNEDCALLBCK = extern "C" fn(u32);
+pub type KEYUPPEDCALLBCK = extern "C" fn(u32);
+
 #[no_mangle]
-pub extern "C" fn gldkGetLatestDownedKey() -> u32 {
-    *DOWNED_KEY.lock().unwrap().get().unwrap()
+pub extern "C" fn gldkSetRedrawRequestedCallback(callback: REDRAWREQUESTEDCALLBACK) {
+    REDRAW_REQUESTED.lock().unwrap().set(callback).unwrap();
 }
 
 #[no_mangle]
-pub extern "C" fn gldkGetLatestUppedKey() -> u32 {
-    *UPPED_KEY.lock().unwrap().get().unwrap()
+pub extern "C" fn gldkSetCloseRequestedCallback(callback: CLOSEREQUESTEDCALLBACK) {
+    CLOSE_REQUESTED.lock().unwrap().set(callback).unwrap();
+}
+
+#[no_mangle]
+pub extern "C" fn gldkSetKeyDownedCallBack(callback: KEYDOWNEDCALLBACK) {
+    KEY_DOWNED.lock().unwrap().set(callback).unwrap();
+}
+#[no_mangle]
+pub extern "C" fn gldkSetKeyUppedCallBack(callback: KEYUPPEDCALLBACK) {
+    KEY_DOWNED.lock().unwrap().set(callback).unwrap();
 }

@@ -4,19 +4,9 @@
 
 GLDKWindow *window;
 
-void callback(WindowEvent event) {
-    switch(event) {
-        case RedrawRequested:
-            glClearColor(1.0,1.0,1.0,1.0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            break;
-        case Keydown:
-            char key = gldkGetLatestDownedKey();
-                                    printf("%s",key);
-        default:
-
-    }
+void redraw_requested(WindowEvent event) {
+    glClearColor(1.0,1.0,1.0,1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gldkSwapBuffers(window);
 }
 
@@ -28,7 +18,8 @@ int main() {
     gldkMakeCurrent(window);
     printf("%s",glGetString(GL_VERSION));
     gldkShowWindow(window);
-    gldkRunWindow(window,callback);
+    gldkSetRedrawRequestedCallback(redraw_requested);
+    gldkRunWindow(window);
     return 0;
 }
 
