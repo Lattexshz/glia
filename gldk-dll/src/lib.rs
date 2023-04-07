@@ -128,6 +128,17 @@ pub extern "C" fn gldkShowWindow(window: *mut GLDKWindow) {
 }
 
 #[no_mangle]
+pub extern "C" fn gldkQuitWindow(window: *mut GLDKWindow) {
+    if window.is_null() {
+        panic_gldk(GLDKError::NullPtr);
+    }
+
+    let window = unsafe { &*window };
+
+    window.quit();
+}
+
+#[no_mangle]
 pub extern "C" fn gldkHideWindow(window: *mut GLDKWindow) {
     if window.is_null() {
         panic_gldk(GLDKError::NullPtr);
@@ -268,15 +279,15 @@ pub extern "C" fn gldkSetWindowMaximized(window: *mut GLDKWindow,bool: u8) {
 }
 
 // Callbacks
+pub type REDRAWREQUESTEDCALLBACK = extern "C" fn();
+pub type CLOSEREQUESTEDCALLBACK = extern "C" fn();
+pub type KEYDOWNEDCALLBACK = extern "C" fn(u32);
+pub type KEYUPPEDCALLBACK = extern "C" fn(u32);
+
 static REDRAW_REQUESTED:Mutex<OnceCell<REDRAWREQUESTEDCALLBACK>> = Mutex::new(OnceCell::new());
 static CLOSE_REQUESTED:Mutex<OnceCell<CLOSEREQUESTEDCALLBACK>> = Mutex::new(OnceCell::new());
 static KEY_DOWNED:Mutex<OnceCell<KEYDOWNEDCALLBACK>> = Mutex::new(OnceCell::new());
 static KEY_UPPED:Mutex<OnceCell<KEYUPPEDCALLBACK>> = Mutex::new(OnceCell::new());
-
-pub type REDRAWREQUESTEDCALLBACK = extern "C" fn();
-pub type CLOSEREQUESTEDCALLBACK = extern "C" fn();
-pub type KEYDOWNEDCALLBCK = extern "C" fn(u32);
-pub type KEYUPPEDCALLBCK = extern "C" fn(u32);
 
 #[no_mangle]
 pub extern "C" fn gldkSetRedrawRequestedCallback(callback: REDRAWREQUESTEDCALLBACK) {

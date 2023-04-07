@@ -36,6 +36,7 @@ void *gldkGetProcAddress(GLDKWindow *window,const char *s);
 
 void gldkRunWindow(GLDKWindow *window);
 void gldkShowWindow(GLDKWindow *window);
+void gldkQuitWindow(GLDKWindow *window);
 void gldkSetWindowTitle(GLDKWindow *window,const char *title);
 void gldkGetWindowSize(GLDKWindow *window,unsigned int *width,unsigned int *height);
 void gldkGetWindowPos(GLDKWindow *window,unsigned int *x,unsigned int *y);

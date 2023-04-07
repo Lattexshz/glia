@@ -102,8 +102,8 @@ fn main() {
             window.swap_buffers();
         }
 
-        WindowEvent::Keydown(code) => {
-
+        WindowEvent::CloseRequested => {
+            window.quit();
         }
 
         _ => {}

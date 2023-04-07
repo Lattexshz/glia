@@ -194,4 +194,8 @@ impl RWindow {
     pub fn set_undecorated(&self,b: bool) {
         self.inner.set_undecorated(b);
     }
+
+    pub fn quit(&self) {
+        std::process::exit(0);
+    }
 }

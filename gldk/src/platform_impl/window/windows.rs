@@ -268,4 +268,10 @@ impl RWindow {
     pub fn set_minimized(&self, minimized: bool) {
         self.inner.set_minimized(minimized);
     }
+
+    pub fn quit(&self) {
+        unsafe {
+            PostQuitMessage(0);
+        }
+    }
 }

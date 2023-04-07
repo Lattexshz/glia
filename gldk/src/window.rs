@@ -120,6 +120,10 @@ impl GLDKWindow {
     pub fn set_minimized(&self, minimized: bool) {
         self.inner.set_minimized(minimized);
     }
+
+    pub fn quit(&self) {
+        self.inner.quit();
+    }
 }
 
 unsafe impl HasRawWindowHandle for GLDKWindow {
