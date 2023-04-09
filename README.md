@@ -1,3 +1,6 @@
+# IMPORTANT NOTICE: This library has been archived since 16:50 (UTC+0900).
+# Please use [GSFK](https://github.com/Lattexshz/GSFK) instead, which allows OpenGL context creation, Vulkan context creation, etc. in one library!
+
 # GLDK
 ### OpenGL application Development toolKit
 
